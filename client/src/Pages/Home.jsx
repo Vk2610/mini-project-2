@@ -1,9 +1,19 @@
-import React from 'react'
+import React from "react";
+import { Outlet } from "react-router-dom";
+import Sidebar from "../Components/Sidebar";
 
 const Home = () => {
   return (
-    <div>Home</div>
-  )
-}
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <Sidebar />
 
-export default Home
+      {/* Main Content */}
+      <div className="flex-grow overflow-y-auto">
+        <Outlet />
+      </div>
+    </div>
+  );
+};
+
+export default Home;

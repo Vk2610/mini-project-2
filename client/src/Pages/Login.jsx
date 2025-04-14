@@ -12,26 +12,32 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Clear any previous errors
+    setError("");
 
     try {
-      const response = await axios.post("http://localhost:3000/user/login", {
-        username,
-        password,
-      },{
-        headers: {
-          "Content-Type": "application/json",
-          token: localStorage.getItem("token"), // Include the token in the headers if needed
+      const response = await axios.post(
+        "http://localhost:3000/user/login",
+        {
+          username,
+          password,
         },
-      });
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      // Save the token to localStorage or cookies
-      // localStorage.setItem("token", response.data.token);
+      const token = response.data.token;
 
-      // Redirect to the dashboard or another page
-      navigate("/dashboard");
+      // Save the new token only after successful login
+      localStorage.setItem("token", token);
+
+      navigate("/home");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      setError(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
     }
   };
 

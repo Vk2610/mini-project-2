@@ -13,25 +13,34 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError(""); // Clear any previous errors
+    setError("");
 
     try {
-      const response = await axios.post("http://localhost:3000/user/register", {
-        username,
-        email,
-        password,
-      }, {
-        headers: {
-          "Content-Type": "application/json",// Include the token in the headers if needed
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:3000/user/register",
+        { username, email, password },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      console.log(response.data); // Log the response for debugging
-      
-      // Redirect to the login page after successful registration
-      navigate("/home");
+      const { token } = response.data;
+
+      if (token) {
+        // Save token to localStorage
+        localStorage.setItem("token", token);
+
+        // Redirect to home
+        navigate("/home");
+      } else {
+        setError("Token not received. Please try again.");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed. Please try again.");
+      setError(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
     }
   };
 
@@ -46,6 +55,7 @@ const Register = () => {
       >
         <h1 className="text-gray-900 text-3xl mt-10 font-medium">Register</h1>
 
+        {/* Username */}
         <div className="flex items-center w-full mt-10 bg-white border border-gray-300/80 h-12 rounded-full overflow-hidden pl-6 gap-2">
           <FaUser className="text-gray-500" />
           <input
@@ -58,6 +68,7 @@ const Register = () => {
           />
         </div>
 
+        {/* Email */}
         <div className="flex items-center mt-4 w-full bg-white border border-gray-300/80 h-12 rounded-full overflow-hidden pl-6 gap-2">
           <svg
             width="16"
@@ -83,6 +94,7 @@ const Register = () => {
           />
         </div>
 
+        {/* Password */}
         <div className="flex items-center mt-4 w-full bg-white border border-gray-300/80 h-12 rounded-full overflow-hidden pl-6 gap-2">
           <svg
             width="13"
@@ -106,8 +118,10 @@ const Register = () => {
           />
         </div>
 
+        {/* Error */}
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
+        {/* Submit */}
         <button
           type="submit"
           className="mt-2 w-full h-11 rounded-full text-white bg-indigo-500 hover:opacity-90 transition-opacity"
