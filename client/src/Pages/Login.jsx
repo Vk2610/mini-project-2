@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import rayatImage from "../assets/Rayat.jpg";
 import { FaUser } from "react-icons/fa";
@@ -8,12 +8,19 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+
+  // Effect to handle navigation after successful login
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/home");
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
     try {
       const response = await axios.post(
         "http://localhost:3000/user/login",
@@ -27,13 +34,13 @@ const Login = () => {
           },
         }
       );
-
       const token = response.data.token;
-
-      // Save the new token only after successful login
+      // Save the token
       localStorage.setItem("token", token);
+      console.log("Login successful, token saved");
 
-      navigate("/home");
+      // Set logged in state to trigger navigation effect
+      setIsLoggedIn(true);
     } catch (err) {
       setError(
         err.response?.data?.message || "Login failed. Please try again."

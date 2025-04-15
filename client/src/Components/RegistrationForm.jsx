@@ -134,16 +134,18 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form
-        className="w-4/5 p-6 bg-white shadow-lg rounded-lg"
-      >
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-10">
+      <form className="w-4/5 p-6 bg-white shadow-lg rounded-lg">
         <h2 className="text-2xl font-semibold text-gray-700 mb-4 text-center">
           Rayat Sevak Welfare Scheme Form
         </h2>
 
         {/* Form Fields */}
-        {[{ label: "Full Name", fields: ["lastName", "firstName", "middleName"] },
+        {[
+          {
+            label: "Full Name",
+            fields: ["lastName", "firstName", "middleName"],
+          },
           { label: "Position", fields: ["position"] },
           { label: "Branch", fields: ["branch"] },
           { label: "Permanent Address", fields: ["address"] },
@@ -222,8 +224,11 @@ const RegistrationForm = () => {
         </div>
 
         {/* Nominee Details */}
-        <h3 className="text-lg font-semibold text-gray-700 mt-4">Nominee Details</h3>
-        {[{ label: "Nominee 1", fields: ["nominee1", "relation1"] },
+        <h3 className="text-lg font-semibold text-gray-700 mt-4">
+          Nominee Details
+        </h3>
+        {[
+          { label: "Nominee 1", fields: ["nominee1", "relation1"] },
           { label: "Nominee 2", fields: ["nominee2", "relation2"] },
         ].map(({ label, fields }) => (
           <div key={fields[0]} className="mb-4">

@@ -9,9 +9,9 @@ router.post('/login', LoginUser);
 router.post('/resetPassword', resetPassword); 
 router.post('/updatePassword', authenticateToken, updatePassword);
 
-// Example protected route
-router.get('/dashboard', authenticateToken, (req, res) => {
-    res.json({ message: 'Welcome to the dashboard!', user: req.user });
-});
+// // Example protected route
+// router.get('/dashboard', authenticateToken, (req, res) => {
+//     res.json({ message: 'Welcome to the dashboard!', user: req.user });
+// });
 
 export default router;
