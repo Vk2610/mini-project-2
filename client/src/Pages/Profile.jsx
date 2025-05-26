@@ -2,12 +2,7 @@ import React from 'react'
 import Sidebar from '../Components/Sidebar'
 
 const Profile = () => {
-  return (
-    <div className='flex h-screen'>
-      <Sidebar />
-      <div>Profile</div>
-    </div>
-  )
+  return <div>Profile</div>;
 }
 
 export default Profile
