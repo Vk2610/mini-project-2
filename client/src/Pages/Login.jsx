@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { FaUser, FaLock } from "react-icons/fa";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [HRMS_No, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Login = () => {
     setError("");
     try {
       const response = await axios.post("http://localhost:3000/auth/login", {
-        username,
+        HRMS_No,
         password,
       });
 
@@ -66,7 +66,7 @@ const Login = () => {
               <Input
                 id="username"
                 placeholder="Enter your username"
-                value={username}
+                value={HRMS_No}
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />

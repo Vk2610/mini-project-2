@@ -37,11 +37,12 @@ const SubAdminProfile = () => {
         };
 
         const response = await axios.get(
-          `http://localhost:3000/admin/${userId}`,
+          `http://localhost:3000/sub-admin/${userId}`,
           config
         );
+        console.log(response.data);
 
-        setUser(response.data);
+        setUser(response.data.data);
         setLoading(false);
       } catch (err) {
         setError(err.message || "Failed to fetch user details");
@@ -84,7 +85,7 @@ const SubAdminProfile = () => {
       const userId = decoded.id;
 
       const response = await axios.put(
-        `http://localhost:3000/admin/${userId}`,
+        `http://localhost:3000/sub-admin/${userId}`,
         user,
         {
           headers: {
@@ -166,8 +167,8 @@ const SubAdminProfile = () => {
 
         <div className="p-8">
           <div className="space-y-6">
-            <ProfileField label="Full Name" field="fullname" />
-            <ProfileField label="Email" field="email" />
+            <ProfileField label="Full Name" field="Employee_Name" />
+            <ProfileField label="Email ID" field="Email_ID" />
             <div className="flex justify-between items-center mb-4 border-b pb-2">
               <label className="text-gray-700 font-semibold w-1/5">
                 Branch Name:
@@ -206,7 +207,7 @@ const SubAdminProfile = () => {
                     )}
                   </div>
                 ) : (
-                  <span className="px-4 py-2">{user.branch_name || "-"}</span>
+                  <span className="px-4 py-2">{user.Branch_Name || "-"}</span>
                 )}
               </div>
               <Button
@@ -257,7 +258,7 @@ const SubAdminProfile = () => {
                   </div>
                 ) : (
                   <span className="px-4 py-2">
-                    {user.branch_region_name || "-"}
+                    {user.Branch_Region_Name || "-"}
                   </span>
                 )}
               </div>

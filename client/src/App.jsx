@@ -25,6 +25,8 @@ import SubAdminProfile from "./Pages/sub-admin/SubAdminProfile";
 import ViewSubAdmin from "./Pages/admin/ViewSubAdmin";
 import ViewUsers from "./Pages/sub-admin/ViewUsers";
 import EditUsers from "./Pages/sub-admin/EditUsers";
+import AdminProfile from "./Pages/admin/AdminProfile";
+import FileUpload from "./Pages/FileUpload";
 
 const App = () => {
   // Fetch the user ID from localStorage
@@ -47,6 +49,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/resetPassword" element={<ResetPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/file-upload" element={<FileUpload />} />
 
         {/* User Routes */}
         <Route element={<PrivateRoute allowedRoles={["user"]} />}>
@@ -73,7 +76,7 @@ const App = () => {
         {/* Admin Routes */}
         <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<Home />}>
-            <Route path="profile" element={<Profile />} />
+            <Route path="profile" element={<AdminProfile />} />
             <Route path="manage-users" element={<ManageUsers />} />
             <Route path="sub-admin/:userId" element={<ViewSubAdmin />} />
           </Route>

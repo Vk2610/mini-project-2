@@ -1,4 +1,4 @@
-import { insertUserProfile, getUserById, updateUserProfile, getAllUserProfiles, deleteUserProfile,  getUserByHRMSNo, getUsersByBranchName, getUsersByBranchRegionName } from "../model/userProfile.model.js";
+import { insertUserProfile, getUserById, updateUserProfile, getAllUserProfiles, deleteUserProfile, getUserByHRMSNo, getUsersByBranchName, getUsersByBranchRegionName } from "../../model/user/userProfile.model.js";
 
 
 export const createUserProfile = async (req, res) => {
@@ -34,28 +34,31 @@ export const getUserProfile = async (req, res) => {
 
 export const updateUserProfileController = async (req, res) => {
     try {
-        const updates = req.body;
+        const userId = req.params.id;
+        const profileData = req.body;
 
-        // Validate that updates are provided
-        if (!updates || Object.keys(updates).length === 0) {
-            return res.status(400).json({ message: "No data provided to update" });
+        // Validate required fields
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: 'User ID is required'
+            });
         }
 
-        const { id } = req.params;
-        const result = await updateUserProfile(id, updates);
+        const result = await updateUserProfile(userId, profileData);
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "User profile not found" });
-        }
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            data: result
+        });
 
-        res.status(200).json({ message: "User profile updated successfully", result });
     } catch (error) {
-        if (error.code === "ER_LOCK_WAIT_TIMEOUT") {
-            console.error("Lock wait timeout exceeded. Retrying...");
-            return res.status(500).json({ message: "Database lock timeout. Please try again." });
-        }
-        console.error("Error updating user profile:", error);
-        res.status(500).json({ message: "Error updating user profile", error });
+        console.error('Error updating user profile:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to update user profile'
+        });
     }
 };
 

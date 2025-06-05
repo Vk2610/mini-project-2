@@ -1,5 +1,5 @@
 import express from "express";
-import { saveApplicationForm, checkFormSubmitted, getFormData } from "../controllers/application.controller.js";
+import { saveApplicationForm, checkFormSubmitted, getFormData } from "../../controllers/user/application.controller.js";
 
 const router = express.Router();    
 

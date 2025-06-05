@@ -1,5 +1,5 @@
 import express from 'express';
-import { claimAmt} from '../controllers/claimAmt.controller.js';
+import { claimAmt} from '../../controllers/user/claimAmt.controller.js';
 // import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();

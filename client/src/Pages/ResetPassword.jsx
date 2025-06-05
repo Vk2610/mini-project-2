@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { IoIosArrowRoundBack } from "react-icons/io";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -26,9 +27,9 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/user/resetPassword",
-        { email, newPassword },
+      const response = await axios.put(
+        "http://localhost:3000/auth/resetPassword",
+        { email, newPassword, confirmPassword },
         {
           headers: {
             "Content-Type": "application/json",
@@ -53,11 +54,18 @@ const ResetPassword = () => {
       style={{ backgroundImage: `url(${rayatImage})` }}
     >
       <Card className="w-full max-w-md shadow-xl bg-white/95 backdrop-blur-md">
-        <CardHeader>
-          <CardTitle className="text-center text-3xl font-semibold text-gray-800">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Button
+            onClick={() => navigate("/")}
+            className="bg-blue-500 hover:bg-blue-600 text-white h-8 w-8 rounded-md flex items-center justify-center"
+          >
+            <IoIosArrowRoundBack className="text-xl" />
+          </Button>
+          <CardTitle className="text-2xl font-semibold text-gray-800 flex-grow text-center mr-8">
             Reset Password
           </CardTitle>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleReset} className="space-y-4">
             {/* Email */}

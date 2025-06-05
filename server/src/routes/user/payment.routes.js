@@ -5,7 +5,7 @@ import {
   savePaymentDetails,
   getTransactions,
   getSingleTransaction
-} from "../controllers/payment.controller.js";
+} from "../../controllers/user/payment.controller.js";
 
 const router = express.Router();
 

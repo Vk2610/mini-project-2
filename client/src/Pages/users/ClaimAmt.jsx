@@ -263,17 +263,57 @@ const ClaimAmt = () => {
 
         <p className="mt-4 mb-4">कळावे.</p>
 
-        <p className="text-right mt-8 mb-4">
-          आपला विश्वासू, <br />
-        </p>
+        <div className="mt-6 text-right">
+          <input type="file" className="w-30 border rounded p-2 m-2" />
+          <div>आपला विश्वासू, </div>
+        </div>
 
         <p className="mt-8 font-semibold underline text-lg mb-4">सोबत :</p>
-        <ol className="list-decimal list-inside mb-4">
-          <li>खर्चाची पावती (नाव व सही केलेली)</li>
-          <li>संस्थेचे सेवापुनर्वसन पत्र (झेरॉक्स प्रत)</li>
-          <li>कुटुंब कल्याण सभासद पत्र (मूळ प्रत)</li>
-          <li>रयत बँक पासबुक (झेरॉक्स प्रत)</li>
-        </ol>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex-1">1. खर्चाची पावती (नाव व सही केलेली)</span>
+            <input
+              type="file"
+              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex-1">
+              2. संस्थेचे सेवापुनर्वसन पत्र (झेरॉक्स प्रत)
+            </span>
+            <input
+              type="file"
+              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex-1">
+              3. कुटुंब कल्याण सभासद पत्र (मूळ प्रत)
+            </span>
+            <input
+              type="file"
+              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex-1">4. रयत बँक पासबुक (झेरॉक्स प्रत)</span>
+            <input
+              type="file"
+              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex-1">5. अन्य कागदपत्रे</span>
+            <input
+              type="file"
+              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+        </div>
 
         {/* Submit Button */}
         <div className="flex justify-end mt-8">

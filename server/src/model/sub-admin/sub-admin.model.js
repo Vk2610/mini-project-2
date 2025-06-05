@@ -1,49 +1,43 @@
 import pool from '../../config/db.js';
 import dotenv from 'dotenv';
 dotenv.config();
-import { v4 as uuidv4 } from 'uuid';
-
-// Corrected CREATE TABLE query
-const createSubAdminTable = `
-    CREATE TABLE IF NOT EXISTS sub_admins (
-        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-        fullname VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NULL UNIQUE,
-        branch_name VARCHAR(255) NULL UNIQUE,
-        branch_region_name VARCHAR(255) NULL,
-        phone_number VARCHAR(15) NULL UNIQUE
-    )
-`;
-
-// Execute the CREATE TABLE query
-(async () => {
-    try {
-        await pool.query(createSubAdminTable);
-        console.log("Sub-admins table created or already exists.");
-    } catch (error) {
-        console.error("Error creating sub-admins table:", error);
-    }
-})();
-
-// Function to create a new sub-admin
-export const createSubAdmin = async (fullname, email, branch_name, branch_region_name, phone_number) => {
-    try {
-        const [rows] = await pool.query(
-            'INSERT INTO sub_admins (fullname, email, branch_name, branch_region_name, phone_number) VALUES (?, ?, ?, ?, ?)',
-            [fullname, email, branch_name, branch_region_name, phone_number]
-        );
-        return rows;
-    } catch (error) {
-        throw error;
-    }
-};
 
 // Function to get a sub-admin by ID
 export const getSubAdminById = async (id) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM sub_admins WHERE id = ?', [id]);
-        return rows[0]; // Return the first row (single sub-admin)
+        // Debug log for input
+        console.log('Fetching sub-admin with ID:', id);
+
+        const query = `
+            SELECT 
+                HRMS_No,
+                Employee_Name,
+                Email_ID,
+                Mobile_No,
+                Branch_Name,
+                Branch_Region_Name,
+                Designation
+            FROM user_profile 
+            WHERE id = ? 
+            AND role = 'sub-admin'
+        `;
+
+        // Execute query
+        const [rows] = await pool.query(query, [id]);
+
+        // Debug log for results
+        console.log('Query results:', {
+            rowCount: rows.length,
+            data: rows[0] || null
+        });
+
+        if (rows.length === 0) {
+            throw new Error(`Sub-admin not found with ID: ${id}`);
+        }
+
+        return rows[0];
     } catch (error) {
+        console.error('Error in getSubAdminById:', error);
         throw error;
     }
 };
@@ -51,7 +45,7 @@ export const getSubAdminById = async (id) => {
 // Function to get all sub-admins
 export const getAllSubAdmins = async () => {
     try {
-        const [rows] = await pool.query('SELECT * FROM sub_admins');
+        const [rows] = await pool.query('SELECT * FROM user_profile WHERE role = "sub-admin"');
         return rows;
     } catch (error) {
         throw error;
@@ -71,19 +65,26 @@ export const updateSubAdmin = async (id, fullname, email, branch_name, branch_re
     }
 };
 
-// Get Users with same branch name as sub-admin but not the sub-admin itself and users from table userProfile table and sub-admins table
-
-
+// Function to get users by branch name
 export const getUsersByBranchName = async (branch_name) => {
     try {
         const query = `
-            SELECT *
+            SELECT
+                id,
+                HRMS_No,
+                Employee_Name,
+                Email_ID,
+                Branch_Name,
+                Branch_Region_Name,
+                Mobile_No,
+                role
             FROM 
-                users u
-            JOIN 
-                user_profile up ON u.username = up.HRMS_No
+                user_profile
             WHERE 
-                up.branch_name = ?
+                Branch_Name = ?
+                AND role = 'user'
+            ORDER BY
+                Employee_Name ASC
         `;
 
         // Debug logs
@@ -93,7 +94,7 @@ export const getUsersByBranchName = async (branch_name) => {
         const [rows] = await pool.query(query, [branch_name]);
 
         // Debug log
-        console.log('Query results:', rows);
+        console.log('Query results:', JSON.stringify(rows, null, 2));
 
         return rows;
     } catch (error) {

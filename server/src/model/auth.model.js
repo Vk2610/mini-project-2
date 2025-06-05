@@ -1,155 +1,136 @@
-// import { pool } from '../config/db.js';
-// import bcrypt from 'bcrypt';
-// import { v4 as uuidv4 } from 'uuid';
-// import dotenv from 'dotenv';
-// dotenv.config();
-
-// // Create users table if not exists
-// const createUsersTable = async () => {
-//   const query = `
-//     CREATE TABLE IF NOT EXISTS users (
-//       id CHAR(36) PRIMARY KEY,
-//       username VARCHAR(255) NOT NULL,
-//       email VARCHAR(255) NOT NULL UNIQUE,
-//       password VARCHAR(255) NOT NULL,
-//       role ENUM('admin', 'sub-admin', 'user') DEFAULT 'user',
-//       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//     )
-//   `;
-//   await pool.query(query);
-// };
-// createUsersTable();
-
-// // Save data of new user
-// const createUser = async (user) => {
-//   const { username, email, password, role } = user;
-//   const hashedPassword = await bcrypt.hash(password, 10);
-//   const id = uuidv4();
-//   const query = 'INSERT INTO users (id, username, email, password, role) VALUES (?, ?, ?, ?, ?)';
-//   const values = [id, username, email, hashedPassword, role];
-//   const [result] = await pool.query(query, values);
-
-
-//   if (role === 'subadmin') {
-//     await connection.execute(
-//       'INSERT INTO sub_admins (id, name, branch, region, mobile) VALUES (?, ?, ?, ?, ?)',
-//       [id, username, branch, region, mobile]
-//     );
-//   }
-
-//   return result;
-// };
-
 import { pool } from '../config/db.js';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Create users table if not exists
-const createUsersTable = async () => {
-  const query = `
-    CREATE TABLE IF NOT EXISTS users (
-      id CHAR(36) PRIMARY KEY,
-      username VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      password VARCHAR(255) NOT NULL,
-      role ENUM('admin', 'sub-admin', 'user') DEFAULT 'user',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-  await pool.query(query);
-};
+
 
 // Save new user
-const createUser = async (user) => {
-  const { 
-    username, 
-    email,
-    password, 
+export const createUser = async (userData) => {
+  const {
+    HRMS_No,
+    Email_ID,
+    Branch_Name,
+    Branch_Region_Name,
+    Mobile_No,
+    password,
     role = 'user'
-  } = user;
+  } = userData;
 
-  // Validate required fields
-  if (!email || !username || !password) {
-    throw new Error('Username, email and password are required');
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const id = uuidv4();
-
-  const connection = await pool.getConnection();
+  let connection;
   try {
+    connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Insert into users table with all required fields
-    const queryUser = `
-      INSERT INTO users (id, username, email, password, role) 
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    const valuesUser = [id, username, email, hashedPassword, role];
-    await connection.query(queryUser, valuesUser);
+    const userId = uuidv4(); // Generate UUID
 
-    // If role is sub-admin, create sub_admin record with only id and username
-    if (role === 'sub-admin') {
-      const querySubAdmin = `
-        INSERT INTO sub_admins (id, fullname,email) 
-        VALUES (?, ?, ?)
-      `;
-      const valuesSubAdmin = [id, username];
-      await connection.query(querySubAdmin, valuesSubAdmin);
+    // Check for existing user with exact case matching
+    const [existingUser] = await connection.query(
+      'SELECT HRMS_No FROM user_profile WHERE BINARY HRMS_No = ? OR BINARY Email_ID = ?',
+      [HRMS_No, Email_ID]
+    );
+
+    if (existingUser.length > 0) {
+      throw new Error('User already exists with this HRMS No or Email');
     }
 
+    // Check for sub-admin with exact branch name matching
+    if (role === 'sub-admin') {
+      const [existingSubAdmin] = await connection.query(
+        'SELECT HRMS_No FROM user_profile WHERE BINARY Branch_Name = ? AND role = ?',
+        [Branch_Name, 'sub-admin']
+      );
+
+      if (existingSubAdmin.length > 0) {
+        throw new Error(`Sub-admin already exists for branch ${Branch_Name}`);
+      }
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user with UUID
+    const query = `
+      INSERT INTO user_profile (
+        id,
+        HRMS_No,
+        Email_ID,
+        Branch_Name,
+        Branch_Region_Name,
+        Mobile_No,
+        password,
+        role
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+      userId,
+      HRMS_No,
+      Email_ID,
+      Branch_Name,
+      Branch_Region_Name,
+      Mobile_No,
+      hashedPassword,
+      role
+    ];
+
+    await connection.query(query, values);
     await connection.commit();
-    return { success: true, userId: id };
+    return { success: true, HRMS_No, userId };
+
   } catch (error) {
-    await connection.rollback();
+    if (connection) {
+      await connection.rollback();
+    }
     throw error;
+
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
-// Login user by email and password
-const getUserByUsername = async (username) => {
-  const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
-  return rows[0];
-};
+export const getUserByUsername = async (username) => {
+  const query = `
+    SELECT * FROM user_profile
+    WHERE HRMS_No = ?
+  `;
+  const [result] = await pool.query(query, [username]);
+  if (result.length === 0) {
+    throw new Error("User not found");
+  }
+  return result[0];
+}
 
-// Reset password using email
-const getUserByEmail = async (email) => {
-  const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-  return rows[0];
-};
+export const getUserById = async (id) => {
+  const query = `
+    SELECT * FROM user_profile
+    WHERE id = ?
+  `;
+  const [result] = await pool.query(query, [id]);
+  if (result.length === 0) {
+    throw new Error("User not found");
+  }
+  return result[0];
+}
 
-// Function to update the user's password
-export const updateUserPassword = async (email, newPassword) => {
-  if (!email || !newPassword) {
-    throw new Error("Email and new password are required.");
+// reset userpassword by email
+export const resetUserPassword = async (email, newPassword) => {
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const query = `
+    UPDATE user_profile
+    SET password = ?
+    WHERE Email_ID = ?
+  `;
+  const [result] = await pool.query(query, [hashedPassword, email]);
+
+  if (result.affectedRows === 0) {
+    throw new Error("User not found or password update failed");
   }
 
-  try {
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+  return { success: true };
+}
 
-    // Update the password in the database
-    const query = `UPDATE users SET password = ? WHERE email = ?`;
-    const [result] = await pool.query(query, [hashedPassword, email]);
 
-    return result.affectedRows > 0; // Return true if the password was updated
-  } catch (error) {
-    console.error("Error updating password:", error);
-    throw new Error("Failed to update password.");
-  }
-};
-
-// Reset password using email
-const resetPassword = async (email, newPassword) => {
-  const user = await getUserByEmail(email);
-  if (!user) {
-    throw new Error('User not found');
-  }
-  await updateUserPassword(email, newPassword);
-};
-
-export { createUser, getUserByUsername, getUserByEmail, resetPassword };
