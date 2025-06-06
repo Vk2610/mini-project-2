@@ -1,4 +1,4 @@
-import { applicationFormData, getFormById } from "../model/applicationForm.model.js";
+import { applicationFormData, getFormById } from "../../model/user/applicationForm.model.js";
 
 export const saveApplicationForm = async (req, res) => {
     try {

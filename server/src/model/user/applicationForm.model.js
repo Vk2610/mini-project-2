@@ -1,6 +1,6 @@
-import { pool } from "../config/db.js";
+import { pool } from "../../config/db.js";
 
-export const createApplicationFormTable = async () => {
+const createApplicationFormTable = async () => {
     const query = `
     CREATE TABLE IF NOT EXISTS applicationForm (
         id CHAR(36) PRIMARY KEY,
@@ -27,10 +27,16 @@ export const createApplicationFormTable = async () => {
         bankBranch VARCHAR(255),    
         pre2017MemberNo VARCHAR(255),    
         subscriptionAmount VARCHAR(255),    
+        signature VARCHAR(2083),
+        Status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        remarks varchar(2000) DEFAULT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`;
     await pool.query(query);
+  console.log("Application form table created or already exists.");
 };
+
+createApplicationFormTable();
 
 // Function to insert application form data into the database
 export const applicationFormData = async (data) => {
@@ -40,8 +46,8 @@ export const applicationFormData = async (data) => {
             id, memberNo, name, address, mobile, whatsappNo, email, hrmsNo, branch, designation,
             permanentAddress, appointmentDate, confirmationDate, birthDate, retirementDate,
             nomineeName, nomineeRelation, alternateNomineeName, alternateNomineeRelation,
-            bankMemberNo, bankBranch, pre2017MemberNo, subscriptionAmount
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            bankMemberNo, bankBranch, pre2017MemberNo, subscriptionAmount, signature, Status, remarks
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -68,6 +74,10 @@ export const applicationFormData = async (data) => {
         data.bankBranch,
         data.pre2017MemberNo,
         data.subscriptionAmount,
+      data.signature,
+      // Ensure the `Status` field is included if needed
+      data.Status || 'pending', // Default to 'pending' if not provided
+      data.remarks || null // Default to null if not provided
     ];
 
     await pool.query(query, values);

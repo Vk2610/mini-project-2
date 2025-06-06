@@ -1,6 +1,7 @@
 import { FaUser, FaWpforms, FaMoneyCheckAlt, FaHome, FaUsers } from "react-icons/fa";
 import { RiMoneyRupeeCircleLine } from "react-icons/ri";
-import { MdAdminPanelSettings } from "react-icons/md";
+// import { MdAdminPanelSettings } from "react-icons/md";
+import { SiGoogleforms } from "react-icons/si";
 import { IoReceiptOutline } from "react-icons/io5"; // Import the icon you want to use
 
 export const USER_LINKS = [
@@ -49,6 +50,13 @@ export const SUBADMIN_LINKS = [
         label: "View Users",
         Path: "/sub-admin/view-users",
         icon: FaUsers,
+    },
+    // Manage applications
+    {
+        key: "ManageApplications",
+        label: "Manage Applications",
+        Path: "/sub-admin/manage-applications",
+        icon: SiGoogleforms,
     },
 ];
 

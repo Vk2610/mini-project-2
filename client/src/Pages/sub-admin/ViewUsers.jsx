@@ -28,15 +28,15 @@ const ViewUsers = () => {
 
         // Get sub-admin's details including branch
         const subAdminResponse = await axios.get(
-          `http://localhost:3000/admin/${jwtDecode(token).id}`, // Use profile endpoint instead
+          `http://localhost:3000/sub-admin/${jwtDecode(token).id}`, // Use profile endpoint instead
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
-        
-        console.log('Sub-admin response:', subAdminResponse.data);
-        
-        const branch = subAdminResponse.data.branch_name;
+
+        console.log("Sub-admin response:", subAdminResponse.data);
+
+        const branch = subAdminResponse.data.data.Branch_Name;
         
         if (!branch) {
           throw new Error('Branch information not found');

@@ -1,21 +1,52 @@
-import pool from '../../config/db.js';
+import { pool } from '../../config/db.js';
+
+// get admin profile
+export const getAdminProfile = async (id) => {
+  const query = `SELECT * FROM user_profile WHERE id = ? AND role = 'admin'`;
+  const [rows] = await pool.query(query, [id]);
+  if (rows.length === 0) {
+    return false;
+  }
+  return rows[0];
+}
+
+// update admin phone and email 
+
+export const updateAdmin = async (id, updates) => {
+  try {
+    const updateFields = Object.keys(updates);
+    const query = `
+            UPDATE user_profile 
+            SET ${updateFields.map(field => `${field} = ?`).join(', ')}
+            WHERE id = ? AND role = 'admin'
+        `;
+
+    const values = [...Object.values(updates), id];
+    const [result] = await pool.query(query, values);
+
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('Error in updateAdmin:', error);
+    throw error;
+  }
+};
 
 const getAllSubAdmins = async () => {
-  const query = `SELECT * FROM sub_admins`;
+  const query = `SELECT * FROM user_profile WHERE role = 'sub-admin'`;
   const [rows] = await
     pool.query(query);
   return rows;
 }
 
 const getSubadmin = async (id) => {
-  const query = `SELECT * FROM sub_admins WHERE id = ?`;
+  const query = `SELECT * FROM user_profile WHERE id = ? AND role = 'sub-admin'`;
   const [rows] = await pool.query(query, [id]);
   return rows;
 }
 
 const editSubAdmin = async (id, data) => {
   // First get the current data
-  const [currentData] = await pool.query('SELECT * FROM sub_admins WHERE id = ?', [id]);
+  const [currentData] = await pool.query('SELECT * FROM user_profile WHERE id = ?', [id]);
 
   if (!currentData.length) return false;
 
@@ -23,25 +54,25 @@ const editSubAdmin = async (id, data) => {
   let updateFields = [];
   let queryParams = [];
 
-  if (data.name && data.name !== currentData[0].fullname) {
-    updateFields.push('fullname = ?');
+  if (data.name && data.name !== currentData[0].Employee_Name) {
+    updateFields.push('Employee_Name = ?');
     queryParams.push(data.name);
   }
 
-  if (data.email && data.email !== currentData[0].email) {
-    updateFields.push('email = ?');
-    queryParams.push(data.email);
+  if (data.Email_ID && data.Email_ID !== currentData[0].Email_ID) {
+    updateFields.push('Email_ID = ?');
+    queryParams.push(data.Email_ID);
   }
 
-  if (data.branch_name && data.branch_name !== currentData[0].branch_name) {
-    updateFields.push('branch_name = ?');
-    queryParams.push(data.branch_name);
+  if (data.Branch_Name && data.Branch_Name !== currentData[0].Branch_Name) {
+    updateFields.push('Branch_Name = ?');
+    queryParams.push(data.Branch_Name);
   }
 
   // Fixed branch region comparison
-  if (data.branch_region_name && data.branch_region_name !== currentData[0].branch_region_name) {
-    updateFields.push('branch_region_name = ?');
-    queryParams.push(data.branch_region_name);
+  if (data.Branch_Region_Name && data.Branch_Region_Name !== currentData[0].Branch_Region_Name) {
+    updateFields.push('Branch_Region_Name = ?');
+    queryParams.push(data.Branch_Region_Name);
   }
 
   // If no fields have changed, return true without making a query
@@ -50,7 +81,7 @@ const editSubAdmin = async (id, data) => {
   // Add id to params array
   queryParams.push(id);
 
-  const query = `UPDATE sub_admins SET ${updateFields.join(', ')} WHERE id = ?`;
+  const query = `UPDATE user_profile SET ${updateFields.join(', ')} WHERE id = ?`;
   console.log('Update Query:', query); // Add this for debugging
   console.log('Query Params:', queryParams); // Add this for debugging
 

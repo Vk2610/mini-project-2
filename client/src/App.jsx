@@ -27,6 +27,10 @@ import ViewUsers from "./Pages/sub-admin/ViewUsers";
 import EditUsers from "./Pages/sub-admin/EditUsers";
 import AdminProfile from "./Pages/admin/AdminProfile";
 import FileUpload from "./Pages/FileUpload";
+import ManageForms from "./Pages/sub-admin/ManageForms";
+// import Unauthorized from "./Components/Unauthorized";
+import AmountClaimPreview from "./Components/AmountClaimPreview"; // Assuming this is a component for previewing
+import HandleApplications from "./Pages/sub-admin/HandleApplications"; // Assuming this is a component for handling applications
 
 const App = () => {
   // Fetch the user ID from localStorage
@@ -60,6 +64,7 @@ const App = () => {
             <Route path="transactions" element={<Transactions />} />
             <Route path="receipt" element={<ReceiptLayout />} />
             <Route path="preview" element={<PreviewPage />} />
+            <Route path="preview-claim" element={<AmountClaimPreview />} />
           </Route>
           <Route path="/user/receipt/:id" element={<ShowReceipt />} />
         </Route>
@@ -70,6 +75,11 @@ const App = () => {
             <Route path="profile" element={<SubAdminProfile />} />
             <Route path="view-users" element={<ViewUsers />} />
             <Route path="users/:userId" element={<EditUsers />} />
+            <Route path="manage-applications" element={<ManageForms />} />
+            <Route
+              path="view-application/:id"
+              element={<HandleApplications />}
+            />
           </Route>
         </Route>
 

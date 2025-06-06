@@ -1,6 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import { insertTransaction, getTransactionsByUsername, getTransactionById } from "../model/payment.model.js";
+import { insertTransaction, getTransactionsByUsername, getTransactionById } from "../../model/user/payment.model.js";
 
 const razorpay = new Razorpay({
   key_id: "rzp_test_pD29fsCUBNwO4U", // Replace with your actual test key

@@ -22,6 +22,10 @@ const Receipt = () => {
     totalAmount: "",
     sendDate: "",
     signature: "",
+    receipt: "",
+    serviceLetter: "",
+    bankPassbook: "",
+    otherDocuments: "",
   });
 
   // Extract userId from token on component mount

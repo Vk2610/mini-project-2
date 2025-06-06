@@ -56,7 +56,7 @@ export const getAllSubAdmins = async () => {
 export const updateSubAdmin = async (id, fullname, email, branch_name, branch_region_name, phone_number) => {
     try {
         const [rows] = await pool.query(
-            'UPDATE sub_admins SET fullname = ?, email = ?, branch_name = ?, branch_region_name = ?, phone_number = ? WHERE id = ?',
+            'UPDATE user_profile SET Employee_Name = ?, Email_ID = ?, Branch_Name = ?, Branch_Region_Name = ?, Mobile_No = ? WHERE id = ?',
             [fullname, email, branch_name, branch_region_name, phone_number, id]
         );
         return rows;
@@ -69,36 +69,58 @@ export const updateSubAdmin = async (id, fullname, email, branch_name, branch_re
 export const getUsersByBranchName = async (branch_name) => {
     try {
         const query = `
-            SELECT
-                id,
-                HRMS_No,
-                Employee_Name,
-                Email_ID,
-                Branch_Name,
-                Branch_Region_Name,
-                Mobile_No,
-                role
-            FROM 
-                user_profile
-            WHERE 
-                Branch_Name = ?
-                AND role = 'user'
-            ORDER BY
-                Employee_Name ASC
+            SELECT * FROM user_profile
+            WHERE Branch_Name = ?
+            AND role = 'user'
         `;
-
-        // Debug logs
-        console.log('Executing query:', query);
-        console.log('With branch_name:', branch_name);
-
         const [rows] = await pool.query(query, [branch_name]);
-
-        // Debug log
-        console.log('Query results:', JSON.stringify(rows, null, 2));
-
         return rows;
     } catch (error) {
         console.error('Error in getUsersByBranchName:', error);
+        throw error;
+    }
+};
+
+// get application forms by branch name
+export const getApplicationFormsByBranchName = async (branch_name) => {
+    try {
+        const query = `
+            SELECT * FROM applicationform
+            WHERE branch = ?
+        `;
+        const [rows] = await pool.query(query, [branch_name]);
+        return rows;
+    } catch (error) {
+        console.error('Error in getApplicationFormsByBranchName:', error);
+        throw error;
+    }
+};
+
+// Update application form status
+export const updateApplicationFormStatus = async (id, status, remarks) => {
+    try {
+        const query = `
+            UPDATE applicationform
+            SET Status = ?, remarks = ?
+            WHERE id = ?
+        `;
+        const [result] = await pool.query(query, [status, remarks, id]);
+        return result;
+    } catch (error) {
+        console.error('Error in updateApplicationFormStatus:', error);
+        throw error;
+    }
+};
+
+export const getApplicationFormById = async (id) => {
+    try {
+        const [rows] = await pool.query(
+            'SELECT * FROM applicationform WHERE id = ?',
+            [id]
+        );
+        return rows[0];
+    } catch (error) {
+        console.error('Error in getApplicationFormById:', error);
         throw error;
     }
 };

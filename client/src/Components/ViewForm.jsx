@@ -3,6 +3,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const ViewForm = () => {
   const token = localStorage.getItem("token");
@@ -12,6 +13,7 @@ const ViewForm = () => {
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showSignature, setShowSignature] = useState(false);
 
   useEffect(() => {
     const fetchFormData = async () => {
@@ -137,7 +139,9 @@ const ViewForm = () => {
 
           <div>
             <label>कायम झाल्याची तारीख: </label>
-            <span className="ml-2">{formatDate(formData.confirmationDate)}</span>
+            <span className="ml-2">
+              {formatDate(formData.confirmationDate)}
+            </span>
           </div>
 
           <div>
@@ -156,7 +160,10 @@ const ViewForm = () => {
           </div>
 
           <div>
-            <label>३१ मार्च २०१७ पूर्वी कुटुंब कल्याण योजनेचा सभासद असल्यास सभासद क्र.: </label>
+            <label>
+              ३१ मार्च २०१७ पूर्वी कुटुंब कल्याण योजनेचा सभासद असल्यास सभासद
+              क्र.:{" "}
+            </label>
             <span className="ml-2">{formData.pre2017MemberNo}</span>
           </div>
 
@@ -187,8 +194,69 @@ const ViewForm = () => {
 
           <div>
             <label>दुसऱ्या वारसाशी नाते : </label>
-            <span className="ml-2 highlight">{formData.alternateNomineeRelation}</span>
+            <span className="ml-2 highlight">
+              {formData.alternateNomineeRelation}
+            </span>
           </div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-end gap-4">
+          {formData.signature && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowSignature(!showSignature)}
+                className="p-2 text-blue-500 hover:text-blue-700 flex items-center gap-2"
+              >
+                {showSignature ? <FaEyeSlash /> : <FaEye />}
+                <span>View Signature</span>
+              </button>
+            </div>
+          )}
+
+          {showSignature && formData.signature && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div className="border-b p-4 flex justify-between items-center bg-gray-50">
+                  <h3 className="text-lg font-semibold">Signature Preview</h3>
+                  <button
+                    onClick={() => setShowSignature(false)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <FaEyeSlash className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-6 bg-gray-50">
+                  <div className="max-w-6xl mx-auto border shadow-xl bg-white rounded-lg">
+                    {formData.signature.includes(".pdf") ? (
+                      <embed
+                        src={formData.signature}
+                        type="application/pdf"
+                        className="w-full h-[70vh]"
+                      />
+                    ) : (
+                      <img
+                        src={formData.signature}
+                        alt="Signature"
+                        className="w-full h-auto max-h-[70vh] object-contain p-4"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t p-4 bg-gray-50 flex justify-end">
+                  <button
+                    onClick={() => setShowSignature(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="text-left">आपला विश्वासू</div>
         </div>
       </div>
     </div>

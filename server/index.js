@@ -7,13 +7,14 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authenticateToken from './src/middleware/auth.middleware.js';
 import userProfileRoutes from './src/routes/user/userProfile.routes.js';
-// import applicationRoutes from './src/routes/user/application.routes.js';
+import applicationRoutes from './src/routes/user/application.routes.js';
 import authRoutes from './src/routes/authRoutes.js';
-// import claimAmtRoutes from './src/routes/user/claimAmt.Routes.js';
+import claimAmtRoutes from './src/routes/user/claimAmt.Routes.js';
 import receiptRoutes from './src/routes/user/receiptRoutes.js';
-// import paymentRoutes from './src/routes/user/payment.routes.js';
+import paymentRoutes from './src/routes/user/payment.routes.js';
 import subAdminRoutes from './src/routes/sub-adminRoutes.js';
-// import adminRoutes from './src/routes/admin.routes.js';
+import adminRoutes from './src/routes/admin.Routes.js';
+import statRoutes from './src/routes/stat.routes.js';
 dotenv.config();
 
 const app = express();
@@ -33,18 +34,21 @@ app.use(cors({
 app.use('/auth', authRoutes);
 
 
-// app.use('/user', applicationRoutes);
+app.use('/user', applicationRoutes);
 app.use('/profile', userProfileRoutes);
-// app.use('/claimAmt', claimAmtRoutes);
+app.use('/claimAmt', claimAmtRoutes);
 app.use('/receipt', receiptRoutes);
-// app.use('/payment', paymentRoutes);
+app.use('/payment', paymentRoutes);
 
 
 // sub-admin routes
 app.use('/sub-admin', subAdminRoutes);
 
 // admin routes
-// app.use('/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
+// statistics routes
+app.use('/stats', statRoutes);
 
 
 

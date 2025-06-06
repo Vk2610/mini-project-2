@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode"; // Correct import
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { BRANCHES } from "../utils/branches";
 
 const RegistrationForm = () => {
   const currentYear = new Date().getFullYear();
   const token = localStorage.getItem("token");
   const decoded = jwtDecode(token);
   const id = decoded.id;
-  const username = decoded.username; // Extract username from the decoded token
 
   const [formData, setFormData] = useState({
     id: id,
@@ -34,10 +34,20 @@ const RegistrationForm = () => {
     nomineeRelation: "",
     alternateNomineeName: "",
     alternateNomineeRelation: "",
+    signature: "",
   });
 
   const [errors, setErrors] = useState({});
   const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false); // Track payment status
+  const [paymentVerified, setPaymentVerified] = useState(false); // Add payment state to track both payment and signature
+  const [file, setFile] = useState(null);
+  const [uploadUrl, setUploadUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [sign, setSign] = useState(null);
+
+  // Add this state for search and dropdown
+  const [branchSearch, setBranchSearch] = useState("");
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -81,10 +91,10 @@ const RegistrationForm = () => {
       return;
     }
 
-    if (!isPaymentSuccessful) {
-      toast.error("Please complete the payment before submitting the form.");
-      return;
-    }
+    // if (!isPaymentSuccessful) {
+    //   toast.error("Please complete the payment before submitting the form.");
+    //   return;
+    // }
 
     try {
       const response = await axios.post(
@@ -142,69 +152,177 @@ const RegistrationForm = () => {
     });
   };
 
+  // Update the handlePayment function
   const handlePayment = async () => {
-    const res = await loadRazorpayScript();
-    if (!res) {
-      toast.error("Razorpay SDK failed to load.");
+    try {
+      // Load Razorpay script
+      const res = await loadRazorpayScript();
+      if (!res) {
+        toast.error("Razorpay SDK failed to load.");
+        return;
+      }
+
+      // Get user details from localStorage or context
+      const token = localStorage.getItem("token");
+      const user = jwtDecode(token);
+
+      if (!user.HRMS_No) {
+        toast.error("User information not found. Please login again.");
+        return;
+      }
+
+      // Create order
+      const response = await axios.post(
+        "http://localhost:3000/payment/create-order",
+        {
+          amount: 100, // Amount in INR
+          currency: "INR",
+          receipt: `receipt_${Math.random().toString(36).substring(7)}`,
+          username: user.username, // Add username to the request
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Configure Razorpay options
+      const options = {
+        key: "rzp_test_pD29fsCUBNwO4U", // Your razorpay key
+        amount: response.data.amount,
+        currency: response.data.currency,
+        name: "Rayat Kutumb Kalyan Yojana",
+        description: "Registration Fee",
+        order_id: response.data.id,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyResponse = await axios.post(
+              "http://localhost:3000/payment/verify",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                username: user.username,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (verifyResponse.data.success) {
+              setIsPaymentSuccessful(true);
+              setPaymentVerified(true); // Add this line
+              toast.success("Payment completed successfully!");
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            setPaymentVerified(false); // Add this line
+            toast.error("Payment verification failed");
+          }
+        },
+        prefill: {
+          name: formData.fullName || "",
+          email: formData.email || "",
+          contact: formData.mobileNo || "",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      // Initialize Razorpay
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      setPaymentVerified(false); // Add this line
+      toast.error("Payment failed to initialize");
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      // Validate file size (5MB limit)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        toast.error("File size should be less than 5MB");
+        return;
+      }
+
+      setFile(selectedFile);
+      const fileURL = URL.createObjectURL(selectedFile);
+      setPreviewUrl(fileURL);
+    }
+  };
+
+  const fileUploadFunc = async () => {
+    if (!file) {
+      toast.error("Please select a file first");
       return;
     }
 
-    const orderRes = await fetch("http://localhost:3000/payment/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount: 100, // Amount in INR
-        currency: "INR",
-        receipt: "receipt#1",
-      }),
-    });
+    const formdata = new FormData();
+    formdata.append("file", file);
 
-    const orderData = await orderRes.json();
-
-    const options = {
-      key: "rzp_test_pD29fsCUBNwO4U", // Replace with your Razorpay Key ID
-      amount: orderData.amount,
-      currency: orderData.currency,
-      name: "My Website",
-      description: "Test Payment",
-      order_id: orderData.id,
-      handler: async function (response) {
-        const verifyRes = await fetch("http://localhost:3000/payment/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(response),
-        });
-
-        const result = await verifyRes.json();
-        if (result.message === "Payment verified successfully") {
-          toast.success("Payment successful!");
-          setIsPaymentSuccessful(true); // Mark payment as successful
-
-          // Save payment details to the backend
-          await axios.post("http://localhost:3000/payment/save-payment", {
-            id: orderData.id,
-            username: username, // Pass the username to the backend
-            amount: orderData.amount,
-            payment_date: new Date().toISOString(),
-            status: "success",
-            method: "Razorpay",
-          });
-        } else {
-          toast.error("Payment verification failed. Please try again.");
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/upload-pdf",
+        formdata,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      },
-      prefill: {
-        name: username, // Prefill with the username
-        email: "john@example.com",
-        contact: "9999999999",
-      },
-      theme: {
-        color: "#3399cc",
-      },
+      );
+
+      if (!response.data?.url) {
+        throw new Error("Invalid response from server");
+      }
+
+      setUploadUrl(response.data.url);
+      setSign(response.data.url);
+      setFormData((prevData) => ({
+        ...prevData,
+        signature: response.data.url,
+      }));
+
+      toast.success("File uploaded successfully!");
+    } catch (error) {
+      console.error("File upload error:", error);
+      toast.error(error.response?.data?.message || "Failed to upload file");
+    }
+  };
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  // Add this useEffect to handle clicking outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".relative")) {
+        setShowBranchDropdown(false);
+      }
     };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleBranchSelect = (selectedBranch) => {
+    setFormData((prev) => ({ ...prev, branch: selectedBranch }));
+    setBranchSearch(selectedBranch);
+    setShowBranchDropdown(false);
   };
 
   return (
@@ -287,17 +405,44 @@ const RegistrationForm = () => {
             )}
           </div>
 
-          <div>
+          <div className="relative">
             <label>३. शाखा: </label>
             <input
               type="text"
-              name="branch"
-              value={formData.branch}
-              onChange={handleChange}
+              value={branchSearch}
+              onChange={(e) => {
+                setBranchSearch(e.target.value);
+                setShowBranchDropdown(true);
+              }}
+              onFocus={() => setShowBranchDropdown(true)}
+              placeholder="शाखा शोधा..."
               className="border-b border-black w-2/3"
             />
             {errors.branch && (
               <p className="text-red-500 text-sm">{errors.branch}</p>
+            )}
+
+            {showBranchDropdown && (
+              <div className="absolute z-10 w-2/3 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {BRANCHES.filter((branch) =>
+                  branch.toLowerCase().includes(branchSearch.toLowerCase())
+                ).map((branch) => (
+                  <div
+                    key={branch}
+                    onClick={() => handleBranchSelect(branch)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {branch}
+                  </div>
+                ))}
+                {BRANCHES.filter((branch) =>
+                  branch.toLowerCase().includes(branchSearch.toLowerCase())
+                ).length === 0 && (
+                  <div className="px-4 py-2 text-gray-500">
+                    कोणतीही शाखा सापडली नाही
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -521,9 +666,59 @@ const RegistrationForm = () => {
             </div>
           </div>
           <div className="mt-6 text-right mx-5">
-            <input type="file" className="w-30 border rounded p-2 my-2" />
-            {/* not compulsory field */}
-            <div>सभासद सही </div>
+            <div className="mb-4">
+              <label className="block mb-2">Upload Signature Document:</label>
+              <input
+                type="file"
+                className="w-full border rounded p-2"
+                onChange={handleFileChange}
+                accept="image/*,application/pdf"
+              />
+            </div>
+
+            {previewUrl && (
+              <div className="mt-6 border rounded-lg overflow-hidden">
+                {file && file.type.startsWith("image/") ? (
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full max-h-96 object-contain"
+                  />
+                ) : (
+                  <embed
+                    src={previewUrl}
+                    type="application/pdf"
+                    className="w-[50vw] h-[200px]"
+                  />
+                )}
+              </div>
+            )}
+
+            {file && !formData.signature && (
+              <div className="flex justify-end mt-4">
+                <button
+                  type="button"
+                  onClick={fileUploadFunc}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center gap-2"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                    />
+                  </svg>
+                  Upload Document
+                </button>
+              </div>
+            )}
+            <div>सभासद सही</div>
           </div>
 
           <div className="flex gap-3 justify-around p-4 mt-6">
@@ -531,17 +726,23 @@ const RegistrationForm = () => {
               onClick={handlePayment}
               type="button"
               className="bg-green-500 w-2xl text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
+              disabled={
+                !formData.fullName || !formData.email || !formData.mobileNo
+              }
             >
-              Proceed to Payment (₹ 100/-)
+              {isPaymentSuccessful
+                ? "Payment Completed ✓"
+                : "Proceed to Payment (₹ 100/-)"}
             </button>
             <button
               type="submit"
-              disabled={!isPaymentSuccessful} // Disable submit until payment is successful
-              className={`w-2xl px-4 py-2 rounded transition duration-200 ${
-                isPaymentSuccessful
-                  ? "bg-blue-500 text-white hover:bg-blue-600"
-                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
-              }`}
+              // disabled={!paymentVerified || !formData.signature}
+              // className={`w-2xl px-4 py-2 rounded transition duration-200 ${
+              //   paymentVerified && formData.signature
+              //     ? "bg-blue-500 text-white hover:bg-blue-600"
+              //     : "bg-gray-400 text-gray-700 cursor-not-allowed"
+              // }`}
+              onClick={handleSubmit}
             >
               सबमिट करा
             </button>
