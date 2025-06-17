@@ -14,6 +14,10 @@ const ViewForm = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showSignature, setShowSignature] = useState(false);
+  const [showRemarkModal, setShowRemarkModal] = useState(false);
+  const [remarks, setRemarks] = useState("");
+  const [statusToUpdate, setStatusToUpdate] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     const fetchFormData = async () => {
@@ -41,6 +45,66 @@ const ViewForm = () => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
+  };
+
+  const updateApplicationStatus = async (id, newStatus, remarks) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `http://localhost:3000/admin/applications/${id}/status`,
+        {
+          status: newStatus,
+          remarks: remarks,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Check if response exists and has data
+      if (response && response.data) {
+        toast.success(`Application ${newStatus} successfully`);
+        // Refresh the page or update UI state
+        window.location.reload();
+      } else {
+        throw new Error("Invalid response from server");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error(error.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  const handleStatusUpdate = async (id, status, remarks) => {
+    try {
+      setIsUpdating(true);
+      const token = localStorage.getItem("token");
+
+      const response = await axios.patch(
+        `http://localhost:3000/admin/applications/${id}/status`,
+        { status, remarks },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success(`Application ${status} successfully`);
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+      toast.error(error.response?.data?.message || "Failed to update status");
+    } finally {
+      setIsUpdating(false);
+      setShowRemarkModal(false);
+    }
   };
 
   if (loading) {
@@ -200,64 +264,98 @@ const ViewForm = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-4">
+        {/* Signature Section */}
+        <div className="mt-8">
           {formData.signature && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowSignature(!showSignature)}
-                className="p-2 text-blue-500 hover:text-blue-700 flex items-center gap-2"
-              >
-                {showSignature ? <FaEyeSlash /> : <FaEye />}
-                <span>View Signature</span>
-              </button>
+            <div className="flex justify-end mb-4">
+              <img
+                src={formData.signature}
+                alt="Signature"
+                className="h-16 object-contain" // Adjust height as needed
+              />
             </div>
           )}
+          <div className="flex justify-between items-center">
+            <div>दिनांक: {formatDate(new Date())}</div>
+            <div>आपला विश्वासू,</div>
+          </div>
+        </div>
 
-          {showSignature && formData.signature && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                <div className="border-b p-4 flex justify-between items-center bg-gray-50">
-                  <h3 className="text-lg font-semibold">Signature Preview</h3>
-                  <button
-                    onClick={() => setShowSignature(false)}
-                    className="text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    <FaEyeSlash className="w-5 h-5" />
-                  </button>
-                </div>
+        <div className="mt-6 flex justify-end space-x-4">
+          <button
+            onClick={() => {
+              setStatusToUpdate("approved");
+              setRemarks("Application Approved");
+              setShowRemarkModal(true);
+            }}
+            disabled={isUpdating}
+            className={`px-4 py-2 rounded-lg text-white ${
+              isUpdating
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600"
+            }`}
+          >
+            {isUpdating ? "Processing..." : "Approve Application"}
+          </button>
 
-                <div className="p-6 bg-gray-50">
-                  <div className="max-w-6xl mx-auto border shadow-xl bg-white rounded-lg">
-                    {formData.signature.includes(".pdf") ? (
-                      <embed
-                        src={formData.signature}
-                        type="application/pdf"
-                        className="w-full h-[70vh]"
-                      />
-                    ) : (
-                      <img
-                        src={formData.signature}
-                        alt="Signature"
-                        className="w-full h-auto max-h-[70vh] object-contain p-4"
-                      />
-                    )}
-                  </div>
-                </div>
+          <button
+            onClick={() => {
+              setStatusToUpdate("rejected");
+              setRemarks("Application Rejected");
+              setShowRemarkModal(true);
+            }}
+            disabled={isUpdating}
+            className={`px-4 py-2 rounded-lg text-white ${
+              isUpdating
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-500 hover:bg-red-600"
+            }`}
+          >
+            {isUpdating ? "Processing..." : "Reject Application"}
+          </button>
+        </div>
 
-                <div className="border-t p-4 bg-gray-50 flex justify-end">
-                  <button
-                    onClick={() => setShowSignature(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
+        {/* Remarks Modal */}
+        {showRemarkModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-6 w-96">
+              <h3 className="text-lg font-semibold mb-4">
+                {statusToUpdate === "approved" ? "Approve" : "Reject"}{" "}
+                Application
+              </h3>
+
+              <textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Enter remarks (optional)"
+                className="w-full h-32 p-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <div className="mt-4 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowRemarkModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() =>
+                    handleStatusUpdate(application.id, statusToUpdate, remarks)
+                  }
+                  disabled={isUpdating}
+                  className={`px-4 py-2 rounded-lg text-white ${
+                    statusToUpdate === "approved"
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-red-500 hover:bg-red-600"
+                  }`}
+                >
+                  {isUpdating ? "Processing..." : "Confirm"}
+                </button>
               </div>
             </div>
-          )}
-          <div className="text-left">आपला विश्वासू</div>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

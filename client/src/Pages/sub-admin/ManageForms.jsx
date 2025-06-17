@@ -4,6 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaEye } from "react-icons/fa";
+import { RiDeleteBin6Line } from "react-icons/ri"; // <-- use this icon
 import { useNavigate } from "react-router-dom";
 
 const ManageForms = () => {
@@ -14,6 +15,9 @@ const ManageForms = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState(""); // New state for search
+  const [deletingId, setDeletingId] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,6 +79,38 @@ const ManageForms = () => {
 
     fetchApplications();
   }, []);
+
+  // Delete handler
+  const handleDelete = async (id) => {
+    setShowConfirm(true);
+    setDeleteTargetId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `http://localhost:3000/sub-admin/application-form/${deleteTargetId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Form deleted successfully");
+      setApplications((prev) =>
+        prev.filter((app) => app.id !== deleteTargetId)
+      );
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          "Failed to delete form"
+      );
+    } finally {
+      setShowConfirm(false);
+      setDeleteTargetId(null);
+    }
+  };
 
   // Update the filterApplications function to include search
   const filterApplications = (items) => {
@@ -233,18 +269,23 @@ const ManageForms = () => {
                       application.Status?.slice(1) || "N/A"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex gap-2">
                   <button
                     onClick={() => {
-                      /* Add view handler */
-                    //   Open another page or modal to view application details
-                      console.log("View application:", application.id);
-                      // You can implement a modal or redirect to a detailed view page
                       navigate(`/sub-admin/view-application/${application.id}`);
                     }}
                     className="text-blue-600 hover:text-blue-900"
+                    title="View"
                   >
                     <FaEye className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(application.id)}
+                    className="ml-2 p-2 rounded-md text-red-600 hover:text-red-800 transition-colors duration-200 flex items-center justify-center"
+                    title="Delete"
+                    style={{ background: "none" }}
+                  >
+                    <RiDeleteBin6Line className="h-5 w-5" />
                   </button>
                 </td>
               </tr>
@@ -252,6 +293,36 @@ const ManageForms = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Custom Confirm Popup */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-xs flex flex-col items-center">
+            <RiDeleteBin6Line className="text-red-600 text-4xl mb-3" />
+            <h2 className="text-lg font-semibold mb-2 text-center">
+              Delete Form?
+            </h2>
+            <p className="text-gray-600 mb-6 text-center">
+              Are you sure you want to delete this form? This action cannot be
+              undone.
+            </p>
+            <div className="flex gap-4 w-full justify-center">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Update empty state handling */}
       {filteredItems.length === 0 && (

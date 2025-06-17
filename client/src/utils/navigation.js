@@ -73,4 +73,10 @@ export const ADMIN_LINKS = [
         Path: "/admin/manage-users",
         icon: FaUsers,
     },
+    {
+        key: "ShowApplications",
+        label: "Show Applications",
+        Path: "/admin/show-applications",
+        icon: SiGoogleforms,
+    },
 ];

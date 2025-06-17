@@ -3,7 +3,7 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import PrincipalModal from "../../Components/PrincipalModal";
 
 const HandleApplications = () => {
   const { id } = useParams();
@@ -11,8 +11,10 @@ const HandleApplications = () => {
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showSignature, setShowSignature] = useState(false);
   const [remarks, setRemarks] = useState("");
+  const [principalSignature, setPrincipalSignature] = useState(null);
+  const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -21,10 +23,13 @@ const HandleApplications = () => {
   };
 
   useEffect(() => {
+    // Fetch application details by ID
     const fetchApplication = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token not found");
+
+        console.log("Fetching form with ID:", id);
 
         const response = await axios.get(
           `http://localhost:3000/user/getFormData/${id}`,
@@ -33,45 +38,81 @@ const HandleApplications = () => {
           }
         );
 
-        if (response.data?.success) {
+        console.log("Application response:", response.data);
+
+        if (response.data) {
           setApplication(response.data);
-          console.log("Application data:", response.data);
+          setLoading(false);
         } else {
-          throw new Error("Failed to fetch application details");
+          throw new Error("No application data found");
         }
       } catch (error) {
         console.error("Error fetching application:", error);
-        toast.error(error.message || "Failed to fetch application");
-        setTimeout(() => navigate("/sub-admin/manage-applications"), 2000);
-      } finally {
-        setLoading(false);
+        toast.error(error.message || "Failed to fetch application details");
       }
     };
+    fetchApplication();
+  }, [id]);
 
-    if (id) {
-      fetchApplication();
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      // Validate file type
+      if (!selectedFile.type.startsWith("image/")) {
+        toast.error("Please upload an image file");
+        return;
+      }
+
+      // Validate file size (2MB limit)
+      if (selectedFile.size > 2 * 1024 * 1024) {
+        toast.error("File size should be less than 2MB");
+        return;
+      }
+
+      setFile(selectedFile);
+      const fileURL = URL.createObjectURL(selectedFile);
+      setPreviewUrl(fileURL);
     }
-  }, [id, navigate]);
+  };
 
   const handleStatusUpdate = async (status) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token not found");
 
+      // For approved status, require principal signature
+      if (status === "approved" && !principalSignature) {
+        toast.error("Please upload principal signature first");
+        return;
+      }
+
+      const data = {
+        status,
+        remarks: status === "rejected" ? remarks : "Application Approved",
+        principal_sign_stamp: principalSignature, // Include the signature URL
+        approval_date: new Date().toISOString().split("T")[0],
+      };
+
       const response = await axios.put(
         `http://localhost:3000/sub-admin/application-form/${id}/status`,
+        data,
         {
-          status,
-          remarks: status === "rejected" ? remarks : "Application Approved",
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
 
       if (response.data?.success) {
         toast.success(`Application ${status} successfully`);
-        setTimeout(() => navigate("/sub-admin/manage-forms"), 2000);
+        setApplication((prev) => ({
+          ...prev,
+          Status: status,
+          remarks: status === "rejected" ? remarks : "Application Approved",
+          principal_sign_stamp: principalSignature,
+        }));
+        setTimeout(() => navigate("/sub-admin/manage-applications"), 2000);
       } else {
         throw new Error(`Failed to ${status} application`);
       }
@@ -245,119 +286,85 @@ const HandleApplications = () => {
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-end gap-4">
-            {application.signature && (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSignature(!showSignature)}
-                  className="p-2 text-blue-500 hover:text-blue-700 flex items-center gap-2"
-                >
-                  {showSignature ? <FaEyeSlash /> : <FaEye />}
-                  <span>View Signature</span>
-                </button>
-              </div>
-            )}
-
-            {showSignature && application.signature && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                  <div className="border-b p-4 flex justify-between items-center bg-gray-50">
-                    <h3 className="text-lg font-semibold">Signature Preview</h3>
-                    <button
-                      onClick={() => setShowSignature(false)}
-                      className="text-gray-500 hover:text-gray-700 transition-colors"
-                    >
-                      <FaEyeSlash className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="p-6 bg-gray-50">
-                    <div className="max-w-6xl mx-auto border shadow-xl bg-white rounded-lg">
-                      {application.signature.includes(".pdf") ? (
-                        <embed
-                          src={application.signature}
-                          type="application/pdf"
-                          className="w-full h-[70vh]"
-                        />
-                      ) : (
-                        <img
-                          src={application.signature}
-                          alt="Signature"
-                          className="w-full h-auto max-h-[70vh] object-contain p-4"
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="border-t p-4 bg-gray-50 flex justify-end">
-                    <button
-                      onClick={() => setShowSignature(false)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-                    >
-                      Close
-                    </button>
-                  </div>
+          <div className="mt-6">
+            <div className="flex flex-col items-end gap-4">
+              {application.signature && (
+                <div className="w-48">
+                  {" "}
+                  {/* Adjust width as needed */}
+                  <img
+                    src={application.signature}
+                    alt="Applicant Signature"
+                    className="h-16 object-contain mx-20"
+                  />
                 </div>
-              </div>
-            )}
-            <div className="text-left">आपला विश्वासू</div>
-          </div>
-        </div>
-      </div>
-      {/* Action Buttons - keep them outside ViewForm */}
-      <div className="sticky bottom-0 bg-white p-4 border-t shadow-lg">
-        <div className="max-w-7xl mx-auto flex justify-end gap-4">
-          <button
-            onClick={() => handleStatusUpdate("approved")}
-            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-          >
-            Approve Application
-          </button>
-          <button
-            onClick={() => setShowRejectModal(true)}
-            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-          >
-            Reject Application
-          </button>
-        </div>
-      </div>
-      {/* Reject Modal */}
-      {showRejectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-[480px] shadow-xl">
-            <h3 className="text-xl font-semibold mb-4">Rejection Remarks</h3>
-            <textarea
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              className="w-full h-32 p-3 border rounded-md mb-4 resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="Please provide detailed reason for rejection..."
-              autoFocus
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (!remarks.trim()) {
-                    toast.error("Please enter rejection remarks");
-                    return;
-                  }
-                  handleStatusUpdate("rejected");
-                  setShowRejectModal(false);
-                }}
-                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              >
-                Confirm Rejection
-              </button>
+              )}
+              <div className="text-left">आपला विश्वासू</div>
             </div>
           </div>
+
+          {/* Principal Signature Section */}
+          <PrincipalModal
+            name={application.name}
+            designation={application.designation}
+            setPrincipalSignature={setPrincipalSignature}
+          />
         </div>
-      )}
+
+        {/* Action Buttons - keep them outside ViewForm */}
+        <div className="sticky bottom-0 bg-white p-4 border-t shadow-lg">
+          <div className="max-w-7xl mx-auto flex justify-end gap-4">
+            <button
+              onClick={() => handleStatusUpdate("approved")}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              Approve Application
+            </button>
+            <button
+              onClick={() => setShowRejectModal(true)}
+              className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              Reject Application
+            </button>
+          </div>
+        </div>
+        {/* Reject Modal */}
+        {showRejectModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-[480px] shadow-xl">
+              <h3 className="text-xl font-semibold mb-4">Rejection Remarks</h3>
+              <textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                className="w-full h-32 p-3 border rounded-md mb-4 resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                placeholder="Please provide detailed reason for rejection..."
+                autoFocus
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowRejectModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!remarks.trim()) {
+                      toast.error("Please enter rejection remarks");
+                      return;
+                    }
+                    handleStatusUpdate("rejected");
+                    setShowRejectModal(false);
+                  }}
+                  className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Confirm Rejection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

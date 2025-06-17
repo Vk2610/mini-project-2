@@ -1,4 +1,4 @@
-import { getAdminProfile, getAllSubAdmins, getSubadmin, editSubAdmin, updateAdmin } from '../../model/Admin/admin.model.js'
+import { getAdminProfile, getAllSubAdmins, getSubadmin, editSubAdmin, updateAdmin, getApplications, getApplicationId, updateApplicationStatus } from '../../model/Admin/admin.model.js'
 
 export const getAdminProfileController = async (req, res) => {
     try {
@@ -87,5 +87,47 @@ export const updateAdminProfileController = async (req, res) => {
             success: false,
             message: "Failed to update profile"
         });
+    }
+};
+
+export const getApplicationsController = async (req, res) => {
+    try {
+        const applications = await getApplications();
+        res.status(200).json(applications);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const getApplicationByIdController = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const application = await getApplicationId(id);
+        if (!application) {
+            return res.status(404).json({ message: "Application not found" });
+        }
+        res.status(200).json(application);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+export const updateApplicationStatusController = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!status) {
+            return res.status(400).json({ message: "Status is required" });
+        }
+
+        const success = await updateApplicationStatus(id, status);
+        if (!success) {
+            return res.status(404).json({ message: "Application not found or no changes made" });
+        }
+
+        res.status(200).json({ message: "Application status updated successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };

@@ -13,7 +13,9 @@ const ShowReceipt = () => {
 
     const fetchReceiptData = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/form/getReceipt/${id}`);
+        const response = await fetch(
+          `http://localhost:3000/receipt/getReceipt/${id}`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch receipt data");
         }
@@ -43,7 +45,7 @@ const ShowReceipt = () => {
       <div className="text-center mt-10">
         <p className="text-red-500">{error}</p>
         <button
-          onClick={() => navigate('/user')} // Go back to the previous page
+          onClick={() => navigate("/user")} // Go back to the previous page
           className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
         >
           Go Back
@@ -57,7 +59,7 @@ const ShowReceipt = () => {
       <div className="text-center mt-10">
         <p>No Receipt Data Found</p>
         <button
-          onClick={() => navigate('/user')} // Go back to the previous page
+          onClick={() => navigate("/user")} // Go back to the previous page
           className="bg-blue-500 text-white px-4 py-2 rounded mt-4 justify-center"
         >
           Go Back
@@ -94,7 +96,7 @@ const ShowReceipt = () => {
       </div>
       <div className="mt-6 text-center">
         <button
-          onClick={() => navigate('/user')} // Go back to the previous page
+          onClick={() => navigate("/user")} // Go back to the previous page
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Go Back

@@ -4,7 +4,8 @@ import {
     updateSubAdminController, 
     getUsersByBranch,
     getApplicationFormsByBranch,
-    updateApplicationFormStatusController
+    updateApplicationFormStatusController,
+    deleteApplicationFormController
 } from '../controllers/sub-admin/sub-admin.controller.js';
 // import { verifyToken } from '../middleware/authMiddleware.js';
 
@@ -22,5 +23,8 @@ router.get('/:id', getSubAdminController);
 router.put('/:id', updateSubAdminController);
 // Update application form status
 router.put('/application-form/:id/status', updateApplicationFormStatusController);
+
+// Delete application form by ID
+router.delete('/application-form/:id', deleteApplicationFormController);
 
 export default router;

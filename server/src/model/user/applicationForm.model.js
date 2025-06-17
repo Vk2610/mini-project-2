@@ -1,5 +1,6 @@
 import { pool } from "../../config/db.js";
 
+// Function to create the application form table
 const createApplicationFormTable = async () => {
     const query = `
     CREATE TABLE IF NOT EXISTS applicationForm (
@@ -30,8 +31,10 @@ const createApplicationFormTable = async () => {
         signature VARCHAR(2083),
         Status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
         remarks varchar(2000) DEFAULT NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );`;
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        principal_sign_stamp VARCHAR(2083) DEFAULT NULL,
+        approval_date DATE DEFAULT NULL
+    )`;
     await pool.query(query);
   console.log("Application form table created or already exists.");
 };
@@ -46,12 +49,13 @@ export const applicationFormData = async (data) => {
             id, memberNo, name, address, mobile, whatsappNo, email, hrmsNo, branch, designation,
             permanentAddress, appointmentDate, confirmationDate, birthDate, retirementDate,
             nomineeName, nomineeRelation, alternateNomineeName, alternateNomineeRelation,
-            bankMemberNo, bankBranch, pre2017MemberNo, subscriptionAmount, signature, Status, remarks
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            bankMemberNo, bankBranch, pre2017MemberNo, subscriptionAmount, signature, Status,
+            remarks, principal_sign_stamp, approval_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
-        data.id, // Add the `id` field
+      id,
         data.memberNo,
         data.fullName,
         data.permanentAddress,
@@ -75,9 +79,10 @@ export const applicationFormData = async (data) => {
         data.pre2017MemberNo,
         data.subscriptionAmount,
       data.signature,
-      // Ensure the `Status` field is included if needed
-      data.Status || 'pending', // Default to 'pending' if not provided
-      data.remarks || null // Default to null if not provided
+      data.Status || 'pending',
+      data.remarks || null,
+      data.principal_sign_stamp || null,
+      data.approval_date || null
     ];
 
     await pool.query(query, values);

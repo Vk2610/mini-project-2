@@ -99,12 +99,7 @@ export const getAllClaimAmtForms = async () => {
 export const getClaimAmtFormById = async (id) => {
     try {
         const query = `
-            SELECT 
-                id, hrmsNo, name, address, date, mobile,
-                retirementDate, memberId, branch, amount,
-                bonus, totalAmount, accountNumber, bankBranch,
-                signature, receipt, serviceLetter, 
-                familyWelfareLetter, bankPassbook, otherDocuments
+            SELECT *
             FROM claimAmt 
             WHERE id = ?
         `;

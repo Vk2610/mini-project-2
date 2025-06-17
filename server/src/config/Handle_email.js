@@ -1,4 +1,17 @@
 import nodemailer from 'nodemailer';
+import PDFDocument from 'pdfkit';
+import { PassThrough } from 'stream';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import fs from 'fs';
+// Get current file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+
+
 
 export const Successful_ApplicationForm = async (Email_ID, HRMS_No, password) => {
     const transporter = nodemailer.createTransport({
@@ -137,7 +150,7 @@ export const Approved_ApplicationForm = async (email, name, memberNo, remarks) =
             </div>
 
             <p style="margin-bottom: 15px;">Dear <strong>${name}</strong>,</p>
-            
+
             <p>We are pleased to inform you that your application for membership in the Rayat Kutumb Kalyan Yojana has been <strong style="color: #28a745">APPROVED</strong>.</p>
 
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
@@ -173,3 +186,206 @@ export const Approved_ApplicationForm = async (email, name, memberNo, remarks) =
         throw error;
     }
 };
+
+
+// export const Approved_ApplicationForm = async (email, name, memberNo, remarks, formData) => {
+//     try {
+//         // Create PDF document
+//         const doc = new PDFDocument({ size: 'A4', margin: 50 });
+//         const chunks = [];
+//         const stream = new PassThrough();
+
+//         // Create promise to handle PDF generation
+//         const pdfPromise = new Promise((resolve, reject) => {
+//             stream.on('data', chunk => chunks.push(chunk));
+//             stream.on('end', () => resolve(Buffer.concat(chunks)));
+//             stream.on('error', reject);
+//         });
+
+//         doc.pipe(stream);
+
+//         // Update font path to point directly to server/fonts directory
+//         const fontPath = path.join(__dirname, '..', '..', 'fonts', 'NotoSansDevanagari-VariableFont_wdth,wght.ttf');
+//         console.log('Loading font from:', fontPath); // Debug log
+
+//         try {
+//             // Check if font file exists before registering
+//             if (!fs.existsSync(fontPath)) {
+//                 throw new Error(`Font file not found at: ${fontPath}`);
+//             }
+
+//             doc.registerFont('Devanagari', fontPath);
+//             doc.font('Devanagari');
+//         } catch (fontError) {
+//             console.error('Font loading error:', fontError);
+//             throw new Error(`Font loading failed: ${fontError.message}`);
+//         }
+
+//         // Title and subtitles
+//         doc.fontSize(18).text('रयत शिक्षण संस्था, सातारा', { align: 'center' });
+//         doc.moveDown(0.3);
+//         doc.fontSize(16).text('रयत सेवक कुटुंब कल्याण योजना', { align: 'center' });
+//         doc.moveDown(0.3);
+//         doc.fontSize(13).text('(वर्गणीदार होण्यासाठीचा करावयाचा अर्ज व संमती पत्रक)', { align: 'center' });
+
+//         // Member Number Box (top-right)
+//         doc.rect(420, 60, 120, 30).stroke();
+//         doc.fontSize(12).text(`सभासद क्र.: KK-${memberNo}`, 430, 70);
+
+//         doc.moveDown(2);
+
+//         // Address section
+//         doc.fontSize(12);
+//         doc.text('प्रति,');
+//         doc.text('     मा. चेअरमन,');
+//         doc.text('     रयत सेवक कुटुंब कल्याण योजना');
+//         doc.text('     रयत शिक्षण संस्था, सातारा');
+//         doc.text('     यांना--');
+//         doc.moveDown(1.2);
+
+//         // Intro paragraph
+//         const intro = `महोदय,
+
+// रयत सेवक कुटुंब कल्याण योजनेची घटना व नियम मी वाचले असून ते मला मान्य आहेत. त्यानुसार या अंशतःशःत नियमामान्यप्रमाणे प्रवेश फी रु. १००/- व वर्गणी रु. ______________ मी माझ्या शाखेमार्फत पाठवित आहे. रयत सेवक कुटुंब कल्याण योजनेची संपूर्ण वर्गणी रु. ५०००/- ही एप्रिल २०____ ते मार्च २०____ या आर्थिक वर्षात समांतर व धुपराषी माझ्या पगारातून कपात करून रयत सेवक कुटुंब कल्याण योजनेच्या खात्यातील वर्गणी मी माझ्या शाखेच्या शाखामुख्यांच्या संमतीने देत आहे. तरी मला रयत सेवक कुटुंब कल्याण योजनेचा सभासद करावा ही विनंती.`;
+
+//         doc.fontSize(12).text(intro, { align: 'justify' });
+//         doc.moveDown(1.5);
+
+//         // Form Section Header
+//         const header = 'माझी माहिती खालीलप्रमाणे आहे';
+//         const headerWidth = doc.widthOfString(header);
+//         const startX = (doc.page.width - headerWidth) / 2;
+
+//         doc.fontSize(14).text(header, startX);
+//         doc.moveTo(startX, doc.y).lineTo(startX + headerWidth, doc.y).stroke();
+//         doc.moveDown(1.5);
+
+//         // Fields (manual layout)
+//         const fields = [
+//             '१. संपूर्ण नाव: _____________________________________      २. हुद्दा: _____________________________',
+//             '३. शाखा : _________________________________________________________________',
+//             '४. कायमचा पत्ता : ____________________________________________________________',
+//             '   Mobile No. ___________________     WhatsApp Mobile No. ___________________',
+//             '   Email ______________________________________',
+//             '५. संस्थेतील नेमणूक तारीख : ___________     ६. कायम झाल्याची तारीख : ___________',
+//             '७. जन्म तारीख : ___________     ८. सेवानिवृत्ती तारीख : ___________',
+//             '९. रयत सेवक बँक – ऑफ केव्हा सभासद क्र. : ________________  शाखा : ___________________',
+//             '१०. ३१ मार्च २०२० पूर्वी कुटुंब कल्याण योजनेचा सभासद असाल/नसाल सभासद क्र.: ________________ व वर्गणी रु.: ________________     HRMS No. ________________',
+//             '११. माझ्या सेवानिवृत्तीनंतर योजनांच्या घटनेनुसार वर्गणी व रक्कम नियमांनुसार मला मिळालेल्या रक्कम मी सेवा कालावधीत लागू झालेल्या घटनेनुसार माझ्या पश्चात वारसांना मिळावी यास मी संमती देतो (तथापि)'
+//         ];
+
+//         fields.forEach(line => {
+//             doc.fontSize(12).text(line);
+//             doc.moveDown(0.5);
+//         });
+
+//         doc.moveDown(2);
+
+//         // Signature Section
+//         doc.text('तारीख: ________________', 70);
+//         doc.text('स्वाक्षरी: ________________', 350);
+//         doc.moveDown(2);
+
+//         // Footer (optional)
+//         doc.fontSize(10)
+//             .fillColor('#666')
+//             .text('ही माहिती शाखामुख्यांच्या संमतीने देण्यात आली आहे.', { align: 'left' });
+
+//         // Finalize the PDF
+//         doc.end();
+
+//         // Wait for PDF generation to complete
+//         const pdfBuffer = await pdfPromise;
+
+//         // Configure email transport with better error handling
+//         const transporter = nodemailer.createTransport({
+//             service: 'gmail',
+//             auth: {
+//                 user: process.env.EMAIL_USER,
+//                 pass: process.env.EMAIL_PASS
+//             },
+//             // Add these options for better reliability
+//             pool: true,
+//             maxConnections: 1,
+//             rateDelta: 20000,
+//             rateLimit: 5
+//         });
+
+//         // Verify transporter configuration
+//         await transporter.verify();
+//         console.log('Email transporter verified successfully');
+
+//         // Enhanced email template
+//         const mail_options = {
+//             from: {
+//                 name: 'Rayat Kutumb Kalyan Yojana',
+//                 address: process.env.EMAIL_USER
+//             },
+//             to: email,
+//             subject: '✅ Application Approved - Rayat Kutumb Kalyan Yojana',
+//             html: `
+//             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+//                 <div style="text-align: center; margin-bottom: 20px;">
+//                     <h2 style="color: #0066cc;">Application Approved! 🎉</h2>
+//                 </div>
+
+//                 <p>Dear <strong>${name}</strong>,</p>
+                
+//                 <p>We are pleased to inform you that your application has been <strong style="color: #28a745;">APPROVED</strong>.</p>
+                
+//                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
+//                     <p><strong>Member Number:</strong> KK-${memberNo}</p>
+//                     <p><strong>Status:</strong> Approved</p>
+//                     ${remarks ? `<p><strong>Remarks:</strong> ${remarks}</p>` : ''}
+//                 </div>
+                
+//                 <p>Please find your approved application form attached to this email.</p>
+                
+//                 <div style="background-color: #e7f3ff; padding: 10px; border-left: 4px solid #0066cc; margin: 20px 0;">
+//                     <p><strong>Important:</strong> Please save this document for your records.</p>
+//                 </div>
+                
+//                 <div style="margin-top: 20px;">
+//                     <p>Best regards,</p>
+//                     <p style="color: #0066cc;"><strong>Rayat Kutumb Kalyan Yojana Team</strong></p>
+//                     <p style="font-size: 12px; color: #666;">Rayat Shikshan Sanstha, Satara</p>
+//                 </div>
+//             </div>
+//             `,
+//             attachments: [{
+//                 filename: `Rayat_Kutumb_Kalyan_Yojana_KK-${memberNo}.pdf`,
+//                 content: pdfBuffer,
+//                 contentType: 'application/pdf',
+//                 encoding: 'base64'
+//             }]
+//         };
+
+//         // Send email with better error handling
+//         console.log(`Attempting to send email to: ${email}`);
+//         const info = await transporter.sendMail(mail_options);
+
+//         console.log('Email sent successfully:', {
+//             messageId: info.messageId,
+//             response: info.response,
+//             accepted: info.accepted,
+//             rejected: info.rejected
+//         });
+
+//         // Close transporter
+//         transporter.close();
+
+//         return {
+//             success: true,
+//             messageId: info.messageId,
+//             pdfSize: pdfBuffer.length
+//         };
+
+//     } catch (error) {
+//         console.error('Error in Approved_ApplicationForm:', {
+//             message: error.message,
+//             stack: error.stack,
+//             name: error.name
+//         });
+//         throw new Error(`Failed to send approval email: ${error.message}`);
+//     }
+// };

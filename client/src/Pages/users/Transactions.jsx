@@ -1,25 +1,39 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Correct import
+import { toast } from "react-toastify";
+import { jwtDecode } from "jwt-decode";
 
 const Transactions = () => {
-  const [transactions, setTransactions] = useState([]); // State to store transactions
-  const [loading, setLoading] = useState(true); // State to handle loading
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch transactions from the backend
+  // Format date to local string
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const token = localStorage.getItem("token"); // Get the token from local storage
-        if (!token) return; // If no token, exit the function
-        const decoded = jwtDecode(token); // Decode the token to get user info  
-        const username = decoded.username;
-        const response = await axios.get(`http://localhost:3000/payment/transactions/${username}`); // Replace with your backend endpoint
-        setTransactions(response.data); // Set the fetched transactions
-        setLoading(false); // Stop loading
+        const token = localStorage.getItem("token");
+        const decoded = jwtDecode(token);
+        const id = decoded.id; // Assuming the token contains user ID
+        const response = await axios.get(
+          `http://localhost:3000/payment/transaction/${id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setTransactions(response.data);
       } catch (error) {
         console.error("Error fetching transactions:", error);
-        setLoading(false); // Stop loading even if there's an error
+        toast.error("Failed to load transaction history");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -27,46 +41,111 @@ const Transactions = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center mt-10">Loading transactions...</div>;
+    return <div className="flex justify-center p-8">Loading...</div>;
   }
 
   return (
-    <div className="relative overflow-x-auto max-w-6xl m-auto mt-10 shadow-md">
-      <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-300">
-        <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-500 dark:text-gray-300">
-          <tr>
-            <th scope="col" className="px-6 py-3">
-              Transaction ID
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Username
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Amount
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Payment Date
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Status
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((transaction) => (
-            <tr
-              key={transaction.id}
-              className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-500 border-gray-200"
-            >
-              <td className="px-6 py-4">{transaction.id}</td>
-              <td className="px-6 py-4">{transaction.username}</td>
-              <td className="px-6 py-4">₹{transaction.amount}</td>
-              <td className="px-6 py-4">{new Date(transaction.payment_date).toLocaleString()}</td>
-              <td className="px-6 py-4 text-green-500 capitalize">{transaction.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        Transaction History
+      </h2>
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-auto">
+            <thead>
+              <tr className="bg-gray-100 border-b border-gray-200">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                  Transaction ID
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                  HRMS No.
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                  Name
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                  Amount
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                  Date
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {transactions.map((transaction, index) => (
+                <tr
+                  key={`${transaction.id}-${index}`}
+                  className="hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="text-sm font-medium text-gray-900">
+                        {transaction.transaction_id}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {transaction.HRMS_No}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {transaction.Name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      ₹
+                      {Number(transaction.amount).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {new Date(transaction.payment_date).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                      ${
+                        transaction.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : transaction.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {transaction.status.charAt(0).toUpperCase() +
+                        transaction.status.slice(1)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {transactions.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No transactions found
+        </div>
+      )}
     </div>
   );
 };

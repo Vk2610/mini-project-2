@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode"; // Correct import
 import Receipt from "../users/Receipt"; // Component to create a receipt
-import AlreadySubmitted from "./AlreadySubmitted"; // Component to show if receipt is already created
+// import AlreadySubmitted from "./AlreadySubmitted"; // Component to show if receipt is already created
+import ReceiptCreated from "../../Components/ReceiptCreated";
 
 const ReceiptLayout = () => {
   const [isReceiptCreated, setIsReceiptCreated] = useState(null); // null while loading
@@ -44,7 +45,7 @@ const ReceiptLayout = () => {
 
   return (
     <div className="p-4">
-      {isReceiptCreated ? <AlreadySubmitted /> : <Receipt />}
+      {isReceiptCreated ? <ReceiptCreated /> : <Receipt />}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { RiMenu2Fill } from "react-icons/ri";
 import { Link, useLocation } from "react-router-dom";
 import { GoSignOut } from "react-icons/go";
 import { USER_LINKS, SUBADMIN_LINKS, ADMIN_LINKS } from "../utils/navigation";
+import rayatLogo from "../assets/Rayat-logo.png"; // Fixed import path
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false); // State for toggling sidebar on small screens
@@ -32,8 +33,9 @@ const Sidebar = () => {
       >
         {/* Header */}
         <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 dark:border-neutral-700">
-          <span className="text-xl font-semibold dark:text-white">Rayat</span>
+          <img src={rayatLogo} alt="Rayat Logo" className="w-20 h-20" />
           {/* Close button for mobile */}
+          <span>Rayat Shikshan Santha, Satara</span>
           <button
             onClick={() => setIsOpen(false)}
             className="lg:hidden p-2 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-full"

@@ -1,6 +1,5 @@
-import { getSubAdminById, updateSubAdmin, getUsersByBranchName, getApplicationFormsByBranchName, updateApplicationFormStatus, getApplicationFormById } from '../../model/sub-admin/sub-admin.model.js';
+import { getSubAdminById, updateSubAdmin, getUsersByBranchName, getApplicationFormsByBranchName, updateApplicationFormStatus, getApplicationFormById, deleteApplicationForm } from '../../model/sub-admin/sub-admin.model.js';
 import { Approved_ApplicationForm, Rejected_ApplicationForm } from '../../config/Handle_email.js';
-import { GiMailShirt } from 'react-icons/gi';
 
 export const getSubAdminController = async (req, res) => {
     try {
@@ -132,32 +131,44 @@ export const getApplicationFormsByBranch = async (req, res) => {
 export const updateApplicationFormStatusController = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, remarks } = req.body;
+        const { status, remarks, principal_sign_stamp, approval_date } = req.body; // Add principal_sign_stamp to destructuring
 
-        // Debug log
-        console.log('Updating application form status:', { id, status, remarks });
+        // Get the full application details
+        const applicationForm = await getApplicationFormById(id);
 
-        if (!id || !status) {
-            return res.status(400).json({
-                success: false,
-                message: 'Application ID and status are required'
-            });
-        }
-
-        const result = await updateApplicationFormStatus(id, status, remarks);
-
-        if (result.affectedRows === 0) {
+        if (!applicationForm) {
             return res.status(404).json({
                 success: false,
                 message: "Application form not found"
             });
         }
 
-        // Get the application details for email
-        const applicationForm = await getApplicationFormById(id);
+        // Prepare update data
+        let updateData = {
+            Status: status,
+            remarks: remarks
+        };
 
-        if (!applicationForm) {
-            throw new Error('Application details not found');
+        // Add signature URL and approval date for approved status
+        if (status.toLowerCase() === 'approved') {
+            if (!principal_sign_stamp) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Principal signature is required for approval"
+                });
+            }
+            updateData.principal_sign_stamp = principal_sign_stamp;
+            updateData.approval_date = new Date().toISOString().split('T')[0];
+        }
+
+        // Update the status with all fields
+        const result = await updateApplicationFormStatus(id, updateData);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Failed to update application status"
+            });
         }
 
         // Send email based on status
@@ -166,14 +177,15 @@ export const updateApplicationFormStatusController = async (req, res) => {
                 applicationForm.email,
                 applicationForm.name,
                 applicationForm.memberNo,
-                remarks || 'Your application has been approved'
+                remarks || 'Your application has been approved',
+                applicationForm
             );
         } else if (status.toLowerCase() === 'rejected') {
             await Rejected_ApplicationForm(
                 applicationForm.email,
                 applicationForm.name,
                 applicationForm.memberNo,
-                remarks || 'Your application has been rejected'
+                remarks
             );
         }
 
@@ -192,3 +204,39 @@ export const updateApplicationFormStatusController = async (req, res) => {
         });
     }
 };
+
+export const deleteApplicationFormController = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Debug log
+        console.log('Requesting deletion of application form with ID:', id);
+
+        if (!id) {
+            return res.status(400).json({
+                message: 'Application form ID is required'
+            });
+        }
+
+        const result = await deleteApplicationForm(id);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: `Application form with ID ${id} not found`
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Application form deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error in deleteApplicationFormController:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete application form',
+            error: error.message
+        });
+    }
+}

@@ -90,26 +90,25 @@ export const getApplicationFormsByBranchName = async (branch_name) => {
         `;
         const [rows] = await pool.query(query, [branch_name]);
         return rows;
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'No application forms found' });
+        }
+
+        // ✅ Return only the first application object (or all as plain array)
+        return res.json(rows[0]); // If you want only one application
+        // return res.json(rows); // If you want all applications (as plain array)
     } catch (error) {
-        console.error('Error in getApplicationFormsByBranchName:', error);
-        throw error;
+        console.error('Error:', error);
+        return res.status(500).json({ message: 'Server error' });
     }
 };
 
 // Update application form status
-export const updateApplicationFormStatus = async (id, status, remarks) => {
-    try {
-        const query = `
-            UPDATE applicationform
-            SET Status = ?, remarks = ?
-            WHERE id = ?
-        `;
-        const [result] = await pool.query(query, [status, remarks, id]);
-        return result;
-    } catch (error) {
-        console.error('Error in updateApplicationFormStatus:', error);
-        throw error;
-    }
+export const updateApplicationFormStatus = async (id, updateData) => {
+    const query = 'UPDATE applicationForm SET ? WHERE id = ?';
+    const result = await pool.query(query, [updateData, id]);
+    return result;
 };
 
 export const getApplicationFormById = async (id) => {
@@ -124,3 +123,16 @@ export const getApplicationFormById = async (id) => {
         throw error;
     }
 };
+
+export const deleteApplicationForm = async (id) => {
+    try {
+        const [result] = await pool.query(
+            'DELETE FROM applicationform WHERE id = ?',
+            [id]
+        );
+        return result;
+    } catch (error) {
+        console.error('Error in deleteApplicationForm:', error);
+        throw error;
+    }
+}

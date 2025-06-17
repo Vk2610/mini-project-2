@@ -10,7 +10,6 @@ import Register from "./Pages/Register";
 import ResetPassword from "./Pages/ResetPassword";
 import Home from "./Pages/Home";
 import FormPage from "./Pages/users/FormPage";
-import PreviewPage from "./Pages/users/PreveiwPage";
 import Transactions from "./Pages/users/Transactions";
 import Profile from "./Pages/Profile";
 import PrivateRoute from "./Components/PrivateRoute";
@@ -29,11 +28,13 @@ import AdminProfile from "./Pages/admin/AdminProfile";
 import FileUpload from "./Pages/FileUpload";
 import ManageForms from "./Pages/sub-admin/ManageForms";
 // import Unauthorized from "./Components/Unauthorized";
-import AmountClaimPreview from "./Components/AmountClaimPreview"; // Assuming this is a component for previewing
-import HandleApplications from "./Pages/sub-admin/HandleApplications"; // Assuming this is a component for handling applications
+import AmountClaimPreview from "./Components/AmountClaimPreview";
+import HandleApplications from "./Pages/sub-admin/HandleApplications";
+import ManageApplicationsAdmin from "./Pages/admin/ManageApplicationsAdmin";
+import ShowForms from "./Pages/admin/ShowForms";
+import Receipt from "./Pages/users/Receipt";
 
 const App = () => {
-  // Fetch the user ID from localStorage
   const token = localStorage.getItem("token");
   let userId = null;
 
@@ -62,11 +63,10 @@ const App = () => {
             <Route path="form" element={<FormPage />} />
             <Route path="claim-amt" element={<ClaimAmt />} />
             <Route path="transactions" element={<Transactions />} />
-            <Route path="receipt" element={<ReceiptLayout />} />
-            <Route path="preview" element={<PreviewPage />} />
+            <Route path="receipt" element={<Receipt />} />
             <Route path="preview-claim" element={<AmountClaimPreview />} />
           </Route>
-          <Route path="/user/receipt/:id" element={<ShowReceipt />} />
+          <Route path="receipt/:id" element={<ShowReceipt />} />
         </Route>
 
         {/* Sub-Admin Routes */}
@@ -89,6 +89,11 @@ const App = () => {
             <Route path="profile" element={<AdminProfile />} />
             <Route path="manage-users" element={<ManageUsers />} />
             <Route path="sub-admin/:userId" element={<ViewSubAdmin />} />
+            <Route path="show-applications" element={<ShowForms />} />
+            <Route
+              path="manage-application/:id"
+              element={<ManageApplicationsAdmin />}
+            />
           </Route>
         </Route>
       </Routes>

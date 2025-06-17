@@ -1,6 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import { insertTransaction, getTransactionsByUsername, getTransactionById } from "../../model/user/payment.model.js";
+import { insertTransaction, getTransactionsByHRMS_No, getTransactionById, ManualSavePayment } from "../../model/user/payment.model.js";
 
 const razorpay = new Razorpay({
   key_id: "rzp_test_pD29fsCUBNwO4U", // Replace with your actual test key
@@ -9,12 +9,16 @@ const razorpay = new Razorpay({
 
 // Create Razorpay Order
 export const createOrder = async (req, res) => {
-  const { amount } = req.body;
+  let { amount, receipt } = req.body;
+  if (!amount || isNaN(amount)) {
+    return res.status(400).json({ error: "Invalid amount" });
+  }
+  amount = Number(amount);
 
   const options = {
     amount: amount * 100, // Razorpay takes amount in paisa
     currency: "INR",
-    receipt: "receipt#1",
+    receipt: receipt || "receipt_" + Date.now(),
   };
 
   try {
@@ -23,7 +27,7 @@ export const createOrder = async (req, res) => {
     console.log("Order created:", order);
   } catch (err) {
     console.error("Error creating order:", err);
-    res.status(500).json({ error: "Order creation failed", details: err });
+    res.status(500).json({ error: "Order creation failed" });
   }
 };
 
@@ -52,35 +56,22 @@ export const verifyPayment = async (req, res) => {
 
 // Save Payment Details
 export const savePaymentDetails = async (req, res) => {
-  const {
-    id,
-    username,
-    amount,
-    payment_date,
-    status,
-  } = req.body;
+  const { HRMS_No, amount, receipt } = req.body;
 
   try {
-    await insertTransaction({
-      id,
-      username,
-      amount,
-      payment_date,
-      status,
-    });
-    res.json({ message: "Payment details saved successfully" });
+    const transaction = await insertTransaction(HRMS_No, amount, receipt);
+    res.json(transaction);
   } catch (error) {
     console.error("Error saving payment details:", error);
     res.status(500).json({ error: "Failed to save payment details" });
   }
-};
-
+}
 // Get Transactions by Username
 export const getTransactions = async (req, res) => {
-  const { username } = req.params;
+  const { HRMS_No } = req.params;
 
   try {
-    const transactions = await getTransactionsByUsername(username);
+    const transactions = await getTransactionsByHRMS_No(HRMS_No);
     res.json(transactions);
   } catch (error) {
     console.error("Error fetching transactions:", error);
@@ -103,5 +94,18 @@ export const getSingleTransaction = async (req, res) => {
   catch (error) {
     console.error("Error fetching transaction:", error);
     res.status(500).json({ error: "Failed to fetch transaction" });
+  }
+};
+
+// Manual Save Payment
+export const ManualSavePaymentController = async (req, res) => {
+  const paymentData = req.body;
+
+  try {
+    const result = await ManualSavePayment(paymentData);
+    res.json(result);
+  } catch (error) {
+    console.error("Error saving manual payment:", error);
+    res.status(500).json({ error: "Failed to save manual payment" });
   }
 };

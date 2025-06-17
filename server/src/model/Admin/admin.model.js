@@ -31,20 +31,20 @@ export const updateAdmin = async (id, updates) => {
   }
 };
 
-const getAllSubAdmins = async () => {
+export const getAllSubAdmins = async () => {
   const query = `SELECT * FROM user_profile WHERE role = 'sub-admin'`;
   const [rows] = await
     pool.query(query);
   return rows;
 }
 
-const getSubadmin = async (id) => {
+export const getSubadmin = async (id) => {
   const query = `SELECT * FROM user_profile WHERE id = ? AND role = 'sub-admin'`;
   const [rows] = await pool.query(query, [id]);
   return rows;
 }
 
-const editSubAdmin = async (id, data) => {
+export const editSubAdmin = async (id, data) => {
   // First get the current data
   const [currentData] = await pool.query('SELECT * FROM user_profile WHERE id = ?', [id]);
 
@@ -89,4 +89,24 @@ const editSubAdmin = async (id, data) => {
   return result.affectedRows > 0;
 }
 
-export { getAllSubAdmins, getSubadmin, editSubAdmin };
+export const getApplications = async (id) => {
+  const query = `SELECT * FROM applicationform WHERE status = 'approved'`;
+  const [rows] = await pool.query(query, [id]);
+  return rows;
+}
+
+export const getApplicationId = async (id) => {
+  const query = `SELECT * FROM applicationform WHERE id = ?`;
+  const [rows] = await pool.query(query, [id]);
+  if (rows.length === 0) {
+    return false;
+  }
+  return rows[0];
+};
+
+// update the status of the application
+export const updateApplicationStatus = async (id, status) => {
+  const query = `UPDATE applicationform SET status = ? WHERE id = ?`;
+  const [result] = await pool.query(query, [status, id]);
+  return result.affectedRows > 0;
+};
