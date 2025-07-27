@@ -245,7 +245,7 @@ const AdminProfile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <ProfileSection
                 icon={MdPerson}
-                label="HRMS Number"
+                label="Username"
                 value={admin.HRMS_No}
               />
               <ProfileSection

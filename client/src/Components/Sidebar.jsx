@@ -33,7 +33,12 @@ const Sidebar = () => {
       >
         {/* Header */}
         <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 dark:border-neutral-700">
-          <img src={rayatLogo} alt="Rayat Logo" className="w-20 h-20" />
+          <img
+            src={rayatLogo}
+            alt="Rayat Logo"
+            className="w-20 h-20"
+            onClick={() => (window.location.href = `/${user.role}`)}
+          />
           {/* Close button for mobile */}
           <span>Rayat Shikshan Santha, Satara</span>
           <button

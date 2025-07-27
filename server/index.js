@@ -5,7 +5,6 @@ import fs from 'fs';
 import { checkConnection } from './src/config/db.js'; 
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authenticateToken from './src/middleware/auth.middleware.js';
 import userProfileRoutes from './src/routes/user/userProfile.routes.js';
 import applicationRoutes from './src/routes/user/application.routes.js';
 import authRoutes from './src/routes/authRoutes.js';
@@ -15,6 +14,7 @@ import paymentRoutes from './src/routes/user/payment.routes.js';
 import subAdminRoutes from './src/routes/sub-adminRoutes.js';
 import adminRoutes from './src/routes/admin.Routes.js';
 import statRoutes from './src/routes/stat.routes.js';
+import verifyToken from './src/middleware/auth.middleware.js';
 dotenv.config();
 
 const app = express();
@@ -34,11 +34,11 @@ app.use(cors({
 app.use('/auth', authRoutes);
 
 
-app.use('/user', applicationRoutes);
-app.use('/profile', userProfileRoutes);
-app.use('/claimAmt', claimAmtRoutes);
-app.use('/receipt', receiptRoutes);
-app.use('/payment', paymentRoutes);
+app.use('/user', verifyToken, applicationRoutes);
+app.use('/profile', verifyToken, userProfileRoutes);
+app.use('/claimAmt', verifyToken, claimAmtRoutes);
+app.use('/receipt', verifyToken, receiptRoutes);
+app.use('/payment', verifyToken, paymentRoutes);
 
 
 // sub-admin routes
