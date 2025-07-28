@@ -1,11 +1,9 @@
 import express from "express";
 import {
   createOrder,
-  verifyPayment,
-  savePaymentDetails,
-  getTransactions,
-  getSingleTransaction,
-  ManualSavePaymentController,
+    verifyPayment,
+    addPaymentDetails,
+    getPaymentDetails
 } from "../../controllers/user/payment.controller.js";
 
 const router = express.Router();
@@ -16,16 +14,9 @@ router.post("/create-order", createOrder);
 // Route to verify Razorpay payment
 router.post("/verify", verifyPayment);
 
-// Route to save payment details
-router.post("/save-payment", savePaymentDetails);
+// Add payment by screenshot
+router.post("/addPayment", addPaymentDetails);
 
-// Route to get all transactions by username
-router.get("/transactions/:username", getTransactions);
-
-// Route to get a single transaction by ID
-router.get("/transaction/:id", getSingleTransaction);
-
-// Route to manually save payment details
-router.post("/manual-save-payment", ManualSavePaymentController);
-
+// Get payment details by HRMS_No
+router.get("/getPaymentDetails/:HRMS_No", getPaymentDetails);
 export default router;

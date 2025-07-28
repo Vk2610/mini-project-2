@@ -1,6 +1,7 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import { insertTransaction, getTransactionsByHRMS_No, getTransactionById, ManualSavePayment } from "../../model/user/payment.model.js";
+import { addPayment, getTransactionsByHRMS_No } from "../../model/user/payment.model.js";
+import moment from "moment";
 
 const razorpay = new Razorpay({
   key_id: "rzp_test_pD29fsCUBNwO4U", // Replace with your actual test key
@@ -54,58 +55,38 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
-// Save Payment Details
-export const savePaymentDetails = async (req, res) => {
-  const { HRMS_No, amount, receipt } = req.body;
+
+export const addPaymentDetails = async (req, res) => {
+  const paymentData = {
+    HRMS_No: req.body.HRMS_No,
+    name: req.body.name,
+    email: req.body.email,
+    amount: req.body.amount,
+    payment_date: moment(req.body.payment_date).format("YYYY-MM-DD HH:mm:ss"),
+    transaction_id: req.body.transaction_id,
+    paymentSS: req.body.paymentSS, // Assuming this is the screenshot URL
+  };
 
   try {
-    const transaction = await insertTransaction(HRMS_No, amount, receipt);
-    res.json(transaction);
+    const result = await addPayment(paymentData);
+    res.status(201).json({ success: true, data: result });
   } catch (error) {
-    console.error("Error saving payment details:", error);
-    res.status(500).json({ error: "Failed to save payment details" });
+    console.error("Error adding payment:", error);
+    res.status(500).json({ success: false, error: "Failed to add payment" });
   }
-}
-// Get Transactions by Username
-export const getTransactions = async (req, res) => {
+};
+
+export const getPaymentDetails = async (req, res) => {
   const { HRMS_No } = req.params;
 
   try {
     const transactions = await getTransactionsByHRMS_No(HRMS_No);
-    res.json(transactions);
-  } catch (error) {
-    console.error("Error fetching transactions:", error);
-    res.status(500).json({ error: "Failed to fetch transactions" });
-  }
-};
-
-// Get Transaction by ID
-export const getSingleTransaction = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const transaction = await getTransactionById(id);
-    if (transaction) {
-      res.json(transaction);
-    } else {
-      res.status(404).json({ error: "Transaction not found" });
+    if (transactions.length === 0) {
+      return res.status(404).json({ message: "No transactions found for this HRMS No" });
     }
-  }
-  catch (error) {
-    console.error("Error fetching transaction:", error);
-    res.status(500).json({ error: "Failed to fetch transaction" });
-  }
-};
-
-// Manual Save Payment
-export const ManualSavePaymentController = async (req, res) => {
-  const paymentData = req.body;
-
-  try {
-    const result = await ManualSavePayment(paymentData);
-    res.json(result);
+    res.status(200).json({ success: true, data: transactions });
   } catch (error) {
-    console.error("Error saving manual payment:", error);
-    res.status(500).json({ error: "Failed to save manual payment" });
+    console.error("Error fetching payment details:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch payment details" });
   }
-};
+}

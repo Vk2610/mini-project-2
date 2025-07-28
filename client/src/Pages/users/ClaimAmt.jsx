@@ -137,6 +137,33 @@ const ClaimAmt = () => {
         setAmount("");
         setBonus("");
         setAccountNumber("");
+        setBankBranch("");
+
+        // Reset file states and previews
+        setFiles({
+          signature: null,
+          receipt: null,
+          serviceLetter: null,
+          familyWelfareLetter: null,
+          bankPassbook: null,
+          otherDocuments: null,
+        });
+        setPreviews({
+          signature: null,
+          receipt: null,
+          serviceLetter: null,
+          familyWelfareLetter: null,
+          bankPassbook: null,
+          otherDocuments: null,
+        });
+        setFileUrls({
+          signature: "",
+          receipt: "",
+          serviceLetter: "",
+          familyWelfareLetter: "",
+          bankPassbook: "",
+          otherDocuments: "",
+        });
       }
     } catch (error) {
       console.error("Error submitting claim amount:", error);

@@ -34,11 +34,11 @@ app.use(cors({
 app.use('/auth', authRoutes);
 
 
-app.use('/user', verifyToken, applicationRoutes);
-app.use('/profile', verifyToken, userProfileRoutes);
-app.use('/claimAmt', verifyToken, claimAmtRoutes);
-app.use('/receipt', verifyToken, receiptRoutes);
-app.use('/payment', verifyToken, paymentRoutes);
+app.use('/user', applicationRoutes);
+app.use('/profile', userProfileRoutes);
+app.use('/claimAmt', claimAmtRoutes);
+app.use('/receipt', receiptRoutes);
+app.use('/payment', paymentRoutes);
 
 
 // sub-admin routes

@@ -110,3 +110,10 @@ export const updateApplicationStatus = async (id, status) => {
   const [result] = await pool.query(query, [status, id]);
   return result.affectedRows > 0;
 };
+
+export const deleteApplication = async (id) => {
+  const query = `DELETE FROM applicationform WHERE id = ?`;
+  const [result] = await pool.query(query, [id]);
+  return result.affectedRows > 0;
+}
+

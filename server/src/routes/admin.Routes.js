@@ -12,6 +12,8 @@ import {
 
 const router = express.Router();
 
+
+
 // Get admin profile
 router.get('/profile/:id', getAdminProfileController);
 // Update admin profile

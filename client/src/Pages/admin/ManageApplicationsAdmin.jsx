@@ -328,62 +328,7 @@ const ManageApplicationsAdmin = () => {
             />
           </div>
         </div>
-
-        {/* Action Buttons - keep them outside ViewForm */}
-        <div className="sticky bottom-0 bg-white p-4 border-t shadow-lg">
-          <div className="max-w-7xl mx-auto flex justify-end gap-4">
-            <button
-              onClick={() => handleStatusUpdate("approved")}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              Approve Application
-            </button>
-            <button
-              onClick={() => setShowRejectModal(true)}
-              className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            >
-              Reject Application
-            </button>
-          </div>
-        </div>
-        {/* Reject Modal */}
-        {showRejectModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-[480px] shadow-xl">
-              <h3 className="text-xl font-semibold mb-4">Rejection Remarks</h3>
-              <textarea
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                className="w-full h-32 p-3 border rounded-md mb-4 resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                placeholder="Please provide detailed reason for rejection..."
-                autoFocus
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowRejectModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (!remarks.trim()) {
-                      toast.error("Please enter rejection remarks");
-                      return;
-                    }
-                    handleStatusUpdate("rejected");
-                    setShowRejectModal(false);
-                  }}
-                  className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                >
-                  Confirm Rejection
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-      {/* Admin modal */}
     </div>
   );
 };
