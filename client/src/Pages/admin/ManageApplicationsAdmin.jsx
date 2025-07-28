@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminModal from "../../Components/AdminModal";
+import { FaEnvelope } from "react-icons/fa";
 
 const ManageApplicationsAdmin = () => {
   const { id } = useParams();
@@ -15,6 +16,7 @@ const ManageApplicationsAdmin = () => {
   const [principalSignature, setPrincipalSignature] = useState(null);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -82,6 +84,40 @@ const ManageApplicationsAdmin = () => {
     } catch (error) {
       console.error(`Error updating status:`, error);
       toast.error(error.message || `Failed to ${status} application`);
+    }
+  };
+
+  const handleSendMail = async () => {
+    try {
+      setSendingEmail(true);
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post(
+        `http://localhost:3000/admin/applications/${id}/send-mail`,
+        {
+          email: application.email,
+          name: application.name,
+          memberNo: application.memberNo,
+          formData: application, // Send full form data
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        toast.success("Form sent successfully to user's email!");
+      } else {
+        throw new Error("Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error(error.message || "Failed to send email");
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -321,6 +357,15 @@ const ManageApplicationsAdmin = () => {
           </div>
           {/* End of Principal Section */}
           <div className="mt-6 border-t border-gray-800 pt-4">
+            <button
+              onClick={handleSendMail}
+              disabled={sendingEmail}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition mb-4"
+            >
+              <FaEnvelope className="text-lg" />
+              {sendingEmail ? "Sending..." : "Send Form to Email"}
+            </button>
+
             <AdminModal
               name={application.name}
               designation={application.designation}

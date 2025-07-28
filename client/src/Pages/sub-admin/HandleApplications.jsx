@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PrincipalModal from "../../Components/PrincipalModal";
+import ShowPayment from "../../Components/ShowPayment";
 
 const HandleApplications = () => {
   const { id } = useParams();
@@ -365,6 +366,8 @@ const HandleApplications = () => {
           </div>
         )}
       </div>
+      {/* Payment status */}
+      <ShowPayment />
     </div>
   );
 };
